@@ -64,7 +64,7 @@ public class EmailChannel {
                      event.getRecipient(), event.getEventType(), messageId);
             return messageId;
 
-        } catch (MessagingException | Exception e) {
+        } catch (Exception e) {
             log.error("Failed to send email to {}: {}", event.getRecipient(), e.getMessage());
             throw new RuntimeException("Email send failed: " + e.getMessage(), e);
         }
