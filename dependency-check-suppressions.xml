@@ -40,26 +40,26 @@
     <suppress until="2026-09-19Z">
         <notes>CVE-2025-55754: No patched Tomcat 10.1.x release available as of 2026-03-19.
         Tomcat is behind a reverse proxy and not directly internet-exposed.</notes>
-        <packageUrl regex="true">^pkg:maven/org\.apache\.tomcat\.embed/tomcat\-embed\-core@.*$</packageUrl>
+        <packageUrl regex="true">^pkg:maven/org\.apache\.tomcat\.embed/tomcat\-embed\-.*@.*$</packageUrl>
         <cve>CVE-2025-55754</cve>
     </suppress>
     <suppress until="2026-09-19Z">
         <notes>CVE-2025-55752: No patched Tomcat 10.1.x release available as of 2026-03-19.
         Tomcat is behind a reverse proxy and not directly internet-exposed.</notes>
-        <packageUrl regex="true">^pkg:maven/org\.apache\.tomcat\.embed/tomcat\-embed\-core@.*$</packageUrl>
+        <packageUrl regex="true">^pkg:maven/org\.apache\.tomcat\.embed/tomcat\-embed\-.*@.*$</packageUrl>
         <cve>CVE-2025-55752</cve>
     </suppress>
     <suppress until="2026-09-19Z">
         <notes>CVE-2025-48989: No patched Tomcat 10.1.x release available as of 2026-03-19.
         Tomcat is behind a reverse proxy and not directly internet-exposed.</notes>
-        <packageUrl regex="true">^pkg:maven/org\.apache\.tomcat\.embed/tomcat\-embed\-core@.*$</packageUrl>
+        <packageUrl regex="true">^pkg:maven/org\.apache\.tomcat\.embed/tomcat\-embed\-.*@.*$</packageUrl>
         <cve>CVE-2025-48989</cve>
     </suppress>
 
     <!--
         CVE-2025-66614 — Apache Tomcat 10.1.x
         CVSS: 9.1
-        Affected: tomcat-embed-core up to and including 10.1.43 (no patched release available as of 2026-03-19)
+        Affected: all tomcat-embed-* up to and including 10.1.43 (no patched release available as of 2026-03-19)
         Justification: Same mitigations as above (reverse proxy, no direct internet exposure).
         This high-severity CVE is tracked with priority; suppress until upstream patch is available.
         Suppressed: 2026-03-19
@@ -68,21 +68,21 @@
         <notes>CVE-2025-66614: No patched Tomcat 10.1.x release available as of 2026-03-19.
         High-priority — actively monitoring Apache Tomcat advisories for a patch release.
         Tomcat is behind a reverse proxy and not directly internet-exposed.</notes>
-        <packageUrl regex="true">^pkg:maven/org\.apache\.tomcat\.embed/tomcat\-embed\-core@.*$</packageUrl>
+        <packageUrl regex="true">^pkg:maven/org\.apache\.tomcat\.embed/tomcat\-embed\-.*@.*$</packageUrl>
         <cve>CVE-2025-66614</cve>
     </suppress>
 
     <!--
         CVE-2026-24734 — Apache Tomcat 10.1.x
         CVSS: 7.5
-        Affected: tomcat-embed-core up to and including 10.1.43; CVE published 2026 — no patch available.
+        Affected: all tomcat-embed-* up to and including 10.1.43; CVE published 2026 — no patch available.
         Justification: Same mitigations as above (reverse proxy, no direct internet exposure).
         Suppressed: 2026-03-19
     -->
     <suppress until="2026-09-19Z">
         <notes>CVE-2026-24734: 2026 CVE with no patch available as of 2026-03-19.
         Tomcat is behind a reverse proxy and not directly internet-exposed.</notes>
-        <packageUrl regex="true">^pkg:maven/org\.apache\.tomcat\.embed/tomcat\-embed\-core@.*$</packageUrl>
+        <packageUrl regex="true">^pkg:maven/org\.apache\.tomcat\.embed/tomcat\-embed\-.*@.*$</packageUrl>
         <cve>CVE-2026-24734</cve>
     </suppress>
 
