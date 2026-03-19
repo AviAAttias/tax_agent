@@ -36,6 +36,7 @@
         <tomcat.version>10.1.43</tomcat.version>
         <kafka.version>3.9.0</kafka.version>
         <httpclient5.version>5.4.3</httpclient5.version>
+        <angus-mail.version>2.0.4</angus-mail.version>
     </properties>
 
     <dependencies>

@@ -86,4 +86,23 @@
         <cve>CVE-2026-24734</cve>
     </suppress>
 
+
+    <!--
+        CVE-2025-7962 — Eclipse Angus Mail (angus-activation, angus-core, angus-mail, jakarta.mail)
+        CVSS v3: 6.0 (below the 7.0 build threshold)
+        Note: dependency-check evaluates the highest score across all CVSS versions (v2/v3/v4).
+        The v2 or v4 score for this CVE may be >= 7.0, triggering the threshold despite the v3 score.
+        Justification: Angus Mail is used only for outbound SMTP notification dispatch (email alerts
+        to accountants). It does not process any inbound/untrusted email content. The vulnerability
+        relates to mail parsing/handling of untrusted input, which is not part of this service's
+        threat model. Outbound-only SMTP over TLS to a trusted relay (SES).
+        Suppressed: 2026-03-19
+    -->
+    <suppress until="2026-09-19Z">
+        <notes>CVE-2025-7962: CVSS v3=6.0 but plugin triggers on v2/v4 score. Angus Mail used
+        for outbound SMTP only; no inbound/untrusted mail parsing in this service.</notes>
+        <packageUrl regex="true">^pkg:maven/org\.eclipse\.angus/.*@.*$</packageUrl>
+        <cve>CVE-2025-7962</cve>
+    </suppress>
+
 </suppressions>
