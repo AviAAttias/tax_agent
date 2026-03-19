@@ -1,6 +1,8 @@
 package com.abco.taxassessment.domain.assessment.domain.service;
 
+import com.abco.taxassessment.domain.assessment.domain.entity.AnomalyEntity;
 import com.abco.taxassessment.domain.assessment.domain.entity.TaxAssessmentEntity;
+import com.abco.taxassessment.domain.assessment.repository.AnomalyRepository;
 import com.abco.taxassessment.domain.assessment.repository.TaxAssessmentRepository;
 import com.abco.taxassessment.domain.transaction.domain.entity.TransactionEntity;
 import com.abco.taxassessment.domain.transaction.repository.TransactionRepository;
@@ -55,21 +57,43 @@ public class AssessmentService {
     private static final BigDecimal SE_DEDUCTION_RATE = new BigDecimal("0.5");
 
     private final TaxAssessmentRepository taxAssessmentRepository;
+    private final AnomalyRepository anomalyRepository;
     private final TransactionRepository transactionRepository;
     private final OutboxEventRepository outboxEventRepository;
     private final ObjectMapper objectMapper;
     private final MeterRegistry meterRegistry;
 
     public AssessmentService(TaxAssessmentRepository taxAssessmentRepository,
+                              AnomalyRepository anomalyRepository,
                               TransactionRepository transactionRepository,
                               OutboxEventRepository outboxEventRepository,
                               ObjectMapper objectMapper,
                               MeterRegistry meterRegistry) {
         this.taxAssessmentRepository = taxAssessmentRepository;
+        this.anomalyRepository = anomalyRepository;
         this.transactionRepository = transactionRepository;
         this.outboxEventRepository = outboxEventRepository;
         this.objectMapper = objectMapper;
         this.meterRegistry = meterRegistry;
+    }
+
+    @Transactional(readOnly = true)
+    public List<TaxAssessmentEntity> listAssessments() {
+        UUID tenantId = TenantContext.requireTenantId();
+        return taxAssessmentRepository.findAllByTenantId(tenantId);
+    }
+
+    @Transactional(readOnly = true)
+    public TaxAssessmentEntity getAssessment(UUID assessmentId) {
+        UUID tenantId = TenantContext.requireTenantId();
+        return taxAssessmentRepository.findByTenantIdAndId(tenantId, assessmentId)
+                .orElseThrow(() -> new ResourceNotFoundException("TaxAssessment", assessmentId));
+    }
+
+    @Transactional(readOnly = true)
+    public List<AnomalyEntity> listAnomalies(UUID assessmentId) {
+        UUID tenantId = TenantContext.requireTenantId();
+        return anomalyRepository.findAllByTenantIdAndAssessmentId(tenantId, assessmentId);
     }
 
     @Transactional

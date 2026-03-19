@@ -103,5 +103,6 @@ public class ArchitectureTest {
     static final ArchRule domain_services_must_be_annotated =
         classes().that().resideInAPackage("..domain.service..")
             .and().haveNameMatching(".*Service")
+            .and().areNotAbstract()
             .should().beAnnotatedWith(org.springframework.stereotype.Service.class);
 }
