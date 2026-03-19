@@ -1,13 +1,14 @@
 package com.abco.taxassessment.architecture;
 
+import com.tngtech.archunit.base.DescribedPredicate;
+import com.tngtech.archunit.core.domain.JavaClass;
+import com.tngtech.archunit.core.domain.JavaModifier;
 import com.tngtech.archunit.core.importer.ImportOption;
 import com.tngtech.archunit.junit.AnalyzeClasses;
 import com.tngtech.archunit.junit.ArchTest;
 import com.tngtech.archunit.lang.ArchRule;
 import jakarta.persistence.Entity;
 
-import static com.tngtech.archunit.base.DescribedPredicate.not;
-import static com.tngtech.archunit.core.domain.JavaClass.Predicates.ABSTRACT;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
 
@@ -105,6 +106,11 @@ public class ArchitectureTest {
     static final ArchRule domain_services_must_be_annotated =
         classes().that().resideInAPackage("..domain.service..")
             .and().haveNameMatching(".*Service")
-            .and(not(ABSTRACT))
+            .and(new DescribedPredicate<JavaClass>("not abstract") {
+                @Override
+                public boolean test(JavaClass javaClass) {
+                    return !javaClass.getModifiers().contains(JavaModifier.ABSTRACT);
+                }
+            })
             .should().beAnnotatedWith(org.springframework.stereotype.Service.class);
 }
