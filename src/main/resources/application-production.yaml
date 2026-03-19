@@ -1,0 +1,37 @@
+# Production secrets are mounted via HashiCorp Vault CSI driver (§13)
+# Files under /vault/secrets/ are imported via configtree
+spring:
+  config:
+    import: "configtree:/vault/secrets/"
+  datasource:
+    # PgBouncer sidecar in session mode for RLS compatibility (§15.3)
+    url: jdbc:postgresql://localhost:5432/${DB_NAME}?prepareThreshold=0&sslmode=require
+    hikari:
+      maximum-pool-size: 5
+      minimum-idle: 2
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS}
+    producer:
+      properties:
+        security.protocol: SASL_SSL
+        sasl.mechanism: PLAIN
+    consumer:
+      properties:
+        security.protocol: SASL_SSL
+        sasl.mechanism: PLAIN
+
+management:
+  tracing:
+    sampling:
+      probability: 0.1
+  otlp:
+    tracing:
+      endpoint: ${OTEL_EXPORTER_OTLP_ENDPOINT}
+
+app:
+  environment: production
+
+logging:
+  level:
+    com.abco.taxassessment: INFO
+    root: WARN

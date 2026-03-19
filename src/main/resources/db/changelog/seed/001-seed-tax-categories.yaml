@@ -1,0 +1,425 @@
+databaseChangeLog:
+  # Full two-level tax category hierarchy (§Implementation Spec §2).
+  # Covers Schedule C, Schedule E, and common business expense types.
+  # This data is immutable platform reference data — not tenant-specific.
+
+  - changeSet:
+      id: seed-001-tax-categories-level1
+      author: platform-engineering
+      context: "!test"
+      changes:
+        # ===== TOP-LEVEL CATEGORIES =====
+        - insert:
+            tableName: tax_categories
+            columns:
+              - column: {name: code, value: REVENUE}
+              - column: {name: parent_code, value: null}
+              - column: {name: name, value: "Revenue"}
+              - column: {name: description, value: "All income received by the business"}
+              - column: {name: tax_form, value: SCHEDULE_C}
+              - column: {name: requires_human_review, valueBoolean: false}
+              - column: {name: is_active, valueBoolean: true}
+
+        - insert:
+            tableName: tax_categories
+            columns:
+              - column: {name: code, value: EXPENSE}
+              - column: {name: parent_code, value: null}
+              - column: {name: name, value: "Business Expenses"}
+              - column: {name: description, value: "All business expenses"}
+              - column: {name: tax_form, value: SCHEDULE_C}
+              - column: {name: requires_human_review, valueBoolean: false}
+              - column: {name: is_active, valueBoolean: true}
+
+        - insert:
+            tableName: tax_categories
+            columns:
+              - column: {name: code, value: TRANSFER}
+              - column: {name: parent_code, value: null}
+              - column: {name: name, value: "Transfers (Non-taxable)"}
+              - column: {name: description, value: "Interaccount transfers — not income or expense"}
+              - column: {name: requires_human_review, valueBoolean: false}
+              - column: {name: is_active, valueBoolean: true}
+
+        - insert:
+            tableName: tax_categories
+            columns:
+              - column: {name: code, value: OWNER_DRAW}
+              - column: {name: parent_code, value: null}
+              - column: {name: name, value: "Owner Draws / Distributions"}
+              - column: {name: description, value: "Draws from business to owner — not deductible"}
+              - column: {name: deductibility_tier, value: NON_DEDUCTIBLE}
+              - column: {name: deductibility_percentage, valueNumeric: 0}
+              - column: {name: requires_human_review, valueBoolean: true}
+              - column: {name: is_active, valueBoolean: true}
+
+      # ===== REVENUE SUBCATEGORIES (Schedule C, Line 1) =====
+        - insert:
+            tableName: tax_categories
+            columns:
+              - column: {name: code, value: REVENUE_SALES}
+              - column: {name: parent_code, value: REVENUE}
+              - column: {name: name, value: "Revenue > Sales"}
+              - column: {name: deductibility_tier, value: FULLY_DEDUCTIBLE}
+              - column: {name: deductibility_percentage, valueNumeric: 100}
+              - column: {name: schedule_line, value: "1a"}
+              - column: {name: tax_form, value: SCHEDULE_C}
+              - column: {name: requires_human_review, valueBoolean: false}
+              - column: {name: is_active, valueBoolean: true}
+
+        - insert:
+            tableName: tax_categories
+            columns:
+              - column: {name: code, value: REVENUE_SERVICES}
+              - column: {name: parent_code, value: REVENUE}
+              - column: {name: name, value: "Revenue > Professional Services"}
+              - column: {name: schedule_line, value: "1a"}
+              - column: {name: tax_form, value: SCHEDULE_C}
+              - column: {name: requires_human_review, valueBoolean: false}
+              - column: {name: is_active, valueBoolean: true}
+
+        - insert:
+            tableName: tax_categories
+            columns:
+              - column: {name: code, value: REVENUE_1099_NEC}
+              - column: {name: parent_code, value: REVENUE}
+              - column: {name: name, value: "Revenue > 1099-NEC Income"}
+              - column: {name: description, value: "Nonemployee compensation ≥ $600 — Form 1099-NEC issued"}
+              - column: {name: schedule_line, value: "1a"}
+              - column: {name: tax_form, value: SCHEDULE_C}
+              - column: {name: requires_human_review, valueBoolean: false}
+              - column: {name: is_active, valueBoolean: true}
+
+        - insert:
+            tableName: tax_categories
+            columns:
+              - column: {name: code, value: REVENUE_RENTAL}
+              - column: {name: parent_code, value: REVENUE}
+              - column: {name: name, value: "Revenue > Rental Income"}
+              - column: {name: schedule_line, value: "3"}
+              - column: {name: tax_form, value: SCHEDULE_E}
+              - column: {name: requires_human_review, valueBoolean: true}
+              - column: {name: is_active, valueBoolean: true}
+
+        - insert:
+            tableName: tax_categories
+            columns:
+              - column: {name: code, value: REVENUE_INTEREST}
+              - column: {name: parent_code, value: REVENUE}
+              - column: {name: name, value: "Revenue > Interest Income"}
+              - column: {name: schedule_line, value: "4"}
+              - column: {name: tax_form, value: SCHEDULE_B}
+              - column: {name: requires_human_review, valueBoolean: false}
+              - column: {name: is_active, valueBoolean: true}
+
+        - insert:
+            tableName: tax_categories
+            columns:
+              - column: {name: code, value: REVENUE_REFUND}
+              - column: {name: parent_code, value: REVENUE}
+              - column: {name: name, value: "Revenue > Business Refunds"}
+              - column: {name: description, value: "Refunds of prior business expenses — reduce expense deduction"}
+              - column: {name: requires_human_review, valueBoolean: true}
+              - column: {name: is_active, valueBoolean: true}
+
+      # ===== EXPENSE SUBCATEGORIES =====
+
+        - insert:
+            tableName: tax_categories
+            columns:
+              - column: {name: code, value: EXPENSE_ADVERTISING}
+              - column: {name: parent_code, value: EXPENSE}
+              - column: {name: name, value: "Expenses > Advertising"}
+              - column: {name: deductibility_tier, value: FULLY_DEDUCTIBLE}
+              - column: {name: deductibility_percentage, valueNumeric: 100}
+              - column: {name: schedule_line, value: "8"}
+              - column: {name: tax_form, value: SCHEDULE_C}
+              - column: {name: requires_human_review, valueBoolean: false}
+              - column: {name: is_active, valueBoolean: true}
+
+        - insert:
+            tableName: tax_categories
+            columns:
+              - column: {name: code, value: EXPENSE_MEALS}
+              - column: {name: parent_code, value: EXPENSE}
+              - column: {name: name, value: "Expenses > Meals (50% Deductible)"}
+              - column: {name: description, value: "Business meals — 50% deductible per §274(n). Retain receipts with business purpose noted."}
+              - column: {name: deductibility_tier, value: FIFTY_PERCENT}
+              - column: {name: deductibility_percentage, valueNumeric: 50}
+              - column: {name: schedule_line, value: "24b"}
+              - column: {name: tax_form, value: SCHEDULE_C}
+              - column: {name: requires_human_review, valueBoolean: false}
+              - column: {name: is_active, valueBoolean: true}
+
+        - insert:
+            tableName: tax_categories
+            columns:
+              - column: {name: code, value: EXPENSE_ENTERTAINMENT}
+              - column: {name: parent_code, value: EXPENSE}
+              - column: {name: name, value: "Expenses > Entertainment (Non-Deductible)"}
+              - column: {name: description, value: "Entertainment expenses — fully non-deductible post-TCJA 2017."}
+              - column: {name: deductibility_tier, value: SUBJECT_TO_PHASEOUT}
+              - column: {name: deductibility_percentage, valueNumeric: 0}
+              - column: {name: requires_human_review, valueBoolean: true}
+              - column: {name: is_active, valueBoolean: true}
+
+        - insert:
+            tableName: tax_categories
+            columns:
+              - column: {name: code, value: EXPENSE_OFFICE_RENT}
+              - column: {name: parent_code, value: EXPENSE}
+              - column: {name: name, value: "Expenses > Office / Rent"}
+              - column: {name: deductibility_tier, value: FULLY_DEDUCTIBLE}
+              - column: {name: deductibility_percentage, valueNumeric: 100}
+              - column: {name: schedule_line, value: "20b"}
+              - column: {name: tax_form, value: SCHEDULE_C}
+              - column: {name: requires_human_review, valueBoolean: false}
+              - column: {name: is_active, valueBoolean: true}
+
+        - insert:
+            tableName: tax_categories
+            columns:
+              - column: {name: code, value: EXPENSE_HOME_OFFICE}
+              - column: {name: parent_code, value: EXPENSE}
+              - column: {name: name, value: "Expenses > Home Office"}
+              - column: {name: description, value: "Home office deduction — proportional based on sq footage ratio. Requires Form 8829."}
+              - column: {name: deductibility_tier, value: PROPORTIONAL}
+              - column: {name: schedule_line, value: "30"}
+              - column: {name: tax_form, value: SCHEDULE_C}
+              - column: {name: requires_human_review, valueBoolean: true}
+              - column: {name: is_active, valueBoolean: true}
+
+        - insert:
+            tableName: tax_categories
+            columns:
+              - column: {name: code, value: EXPENSE_TRAVEL}
+              - column: {name: parent_code, value: EXPENSE}
+              - column: {name: name, value: "Expenses > Travel"}
+              - column: {name: description, value: "Business travel — flights, hotels, transportation. Retain receipts and business purpose."}
+              - column: {name: deductibility_tier, value: FULLY_DEDUCTIBLE}
+              - column: {name: deductibility_percentage, valueNumeric: 100}
+              - column: {name: schedule_line, value: "24a"}
+              - column: {name: tax_form, value: SCHEDULE_C}
+              - column: {name: requires_human_review, valueBoolean: false}
+              - column: {name: is_active, valueBoolean: true}
+
+        - insert:
+            tableName: tax_categories
+            columns:
+              - column: {name: code, value: EXPENSE_VEHICLE_MILEAGE}
+              - column: {name: parent_code, value: EXPENSE}
+              - column: {name: name, value: "Expenses > Vehicle (Mileage Method)"}
+              - column: {name: description, value: "Standard mileage rate election. Mutually exclusive with actual expense method."}
+              - column: {name: deductibility_tier, value: FULLY_DEDUCTIBLE}
+              - column: {name: schedule_line, value: "9"}
+              - column: {name: tax_form, value: SCHEDULE_C}
+              - column: {name: requires_human_review, valueBoolean: true}
+              - column: {name: is_active, valueBoolean: true}
+
+        - insert:
+            tableName: tax_categories
+            columns:
+              - column: {name: code, value: EXPENSE_VEHICLE_ACTUAL}
+              - column: {name: parent_code, value: EXPENSE}
+              - column: {name: name, value: "Expenses > Vehicle (Actual Expense Method)"}
+              - column: {name: description, value: "Actual vehicle expenses — proportional to business use percentage."}
+              - column: {name: deductibility_tier, value: PROPORTIONAL}
+              - column: {name: schedule_line, value: "9"}
+              - column: {name: tax_form, value: SCHEDULE_C}
+              - column: {name: requires_human_review, valueBoolean: true}
+              - column: {name: is_active, valueBoolean: true}
+
+        - insert:
+            tableName: tax_categories
+            columns:
+              - column: {name: code, value: EXPENSE_PAYROLL}
+              - column: {name: parent_code, value: EXPENSE}
+              - column: {name: name, value: "Expenses > Payroll / Wages"}
+              - column: {name: deductibility_tier, value: FULLY_DEDUCTIBLE}
+              - column: {name: deductibility_percentage, valueNumeric: 100}
+              - column: {name: schedule_line, value: "26"}
+              - column: {name: tax_form, value: SCHEDULE_C}
+              - column: {name: requires_human_review, valueBoolean: false}
+              - column: {name: is_active, valueBoolean: true}
+
+        - insert:
+            tableName: tax_categories
+            columns:
+              - column: {name: code, value: EXPENSE_CONTRACTOR}
+              - column: {name: parent_code, value: EXPENSE}
+              - column: {name: name, value: "Expenses > Contractor Payments"}
+              - column: {name: description, value: "Contractor payments ≥ $600 require Form 1099-NEC filing"}
+              - column: {name: deductibility_tier, value: FULLY_DEDUCTIBLE}
+              - column: {name: deductibility_percentage, valueNumeric: 100}
+              - column: {name: schedule_line, value: "11"}
+              - column: {name: tax_form, value: SCHEDULE_C}
+              - column: {name: requires_human_review, valueBoolean: false}
+              - column: {name: is_active, valueBoolean: true}
+
+        - insert:
+            tableName: tax_categories
+            columns:
+              - column: {name: code, value: EXPENSE_SOFTWARE}
+              - column: {name: parent_code, value: EXPENSE}
+              - column: {name: name, value: "Expenses > Software / SaaS"}
+              - column: {name: deductibility_tier, value: FULLY_DEDUCTIBLE}
+              - column: {name: deductibility_percentage, valueNumeric: 100}
+              - column: {name: schedule_line, value: "22"}
+              - column: {name: tax_form, value: SCHEDULE_C}
+              - column: {name: requires_human_review, valueBoolean: false}
+              - column: {name: is_active, valueBoolean: true}
+
+        - insert:
+            tableName: tax_categories
+            columns:
+              - column: {name: code, value: EXPENSE_UTILITIES}
+              - column: {name: parent_code, value: EXPENSE}
+              - column: {name: name, value: "Expenses > Utilities"}
+              - column: {name: deductibility_tier, value: FULLY_DEDUCTIBLE}
+              - column: {name: deductibility_percentage, valueNumeric: 100}
+              - column: {name: schedule_line, value: "25"}
+              - column: {name: tax_form, value: SCHEDULE_C}
+              - column: {name: requires_human_review, valueBoolean: false}
+              - column: {name: is_active, valueBoolean: true}
+
+        - insert:
+            tableName: tax_categories
+            columns:
+              - column: {name: code, value: EXPENSE_INSURANCE}
+              - column: {name: parent_code, value: EXPENSE}
+              - column: {name: name, value: "Expenses > Business Insurance"}
+              - column: {name: deductibility_tier, value: FULLY_DEDUCTIBLE}
+              - column: {name: deductibility_percentage, valueNumeric: 100}
+              - column: {name: schedule_line, value: "15"}
+              - column: {name: tax_form, value: SCHEDULE_C}
+              - column: {name: requires_human_review, valueBoolean: false}
+              - column: {name: is_active, valueBoolean: true}
+
+        - insert:
+            tableName: tax_categories
+            columns:
+              - column: {name: code, value: EXPENSE_LEGAL_PROFESSIONAL}
+              - column: {name: parent_code, value: EXPENSE}
+              - column: {name: name, value: "Expenses > Legal & Professional Fees"}
+              - column: {name: deductibility_tier, value: FULLY_DEDUCTIBLE}
+              - column: {name: deductibility_percentage, valueNumeric: 100}
+              - column: {name: schedule_line, value: "17"}
+              - column: {name: tax_form, value: SCHEDULE_C}
+              - column: {name: requires_human_review, valueBoolean: false}
+              - column: {name: is_active, valueBoolean: true}
+
+        - insert:
+            tableName: tax_categories
+            columns:
+              - column: {name: code, value: EXPENSE_OFFICE_SUPPLIES}
+              - column: {name: parent_code, value: EXPENSE}
+              - column: {name: name, value: "Expenses > Office Supplies"}
+              - column: {name: deductibility_tier, value: FULLY_DEDUCTIBLE}
+              - column: {name: deductibility_percentage, valueNumeric: 100}
+              - column: {name: schedule_line, value: "22"}
+              - column: {name: tax_form, value: SCHEDULE_C}
+              - column: {name: requires_human_review, valueBoolean: false}
+              - column: {name: is_active, valueBoolean: true}
+
+        - insert:
+            tableName: tax_categories
+            columns:
+              - column: {name: code, value: EXPENSE_HEALTH_INSURANCE}
+              - column: {name: parent_code, value: EXPENSE}
+              - column: {name: name, value: "Expenses > Health Insurance (Self-Employed)"}
+              - column: {name: description, value: "Self-employed health insurance deduction — Form 1040 Schedule 1 line 17, not Schedule C"}
+              - column: {name: deductibility_tier, value: FULLY_DEDUCTIBLE}
+              - column: {name: deductibility_percentage, valueNumeric: 100}
+              - column: {name: tax_form, value: FORM_1040}
+              - column: {name: requires_human_review, valueBoolean: true}
+              - column: {name: is_active, valueBoolean: true}
+
+        - insert:
+            tableName: tax_categories
+            columns:
+              - column: {name: code, value: EXPENSE_RETIREMENT}
+              - column: {name: parent_code, value: EXPENSE}
+              - column: {name: name, value: "Expenses > Retirement Contributions (SEP/SIMPLE)"}
+              - column: {name: description, value: "SEP-IRA, SIMPLE IRA contributions — limits apply. See Publication 560."}
+              - column: {name: deductibility_tier, value: FULLY_DEDUCTIBLE}
+              - column: {name: schedule_line, value: "19"}
+              - column: {name: tax_form, value: SCHEDULE_C}
+              - column: {name: requires_human_review, valueBoolean: true}
+              - column: {name: is_active, valueBoolean: true}
+
+        - insert:
+            tableName: tax_categories
+            columns:
+              - column: {name: code, value: EXPENSE_DEPRECIATION}
+              - column: {name: parent_code, value: EXPENSE}
+              - column: {name: name, value: "Expenses > Depreciation / Section 179"}
+              - column: {name: description, value: "Capital asset purchases requiring depreciation schedule or Section 179 election"}
+              - column: {name: deductibility_tier, value: DEPRECIATION}
+              - column: {name: schedule_line, value: "13"}
+              - column: {name: tax_form, value: SCHEDULE_C}
+              - column: {name: requires_human_review, valueBoolean: true}
+              - column: {name: is_active, valueBoolean: true}
+
+        - insert:
+            tableName: tax_categories
+            columns:
+              - column: {name: code, value: EXPENSE_INTEREST}
+              - column: {name: parent_code, value: EXPENSE}
+              - column: {name: name, value: "Expenses > Business Interest"}
+              - column: {name: description, value: "Interest on business loans — §163(j) limitation may apply for large businesses"}
+              - column: {name: deductibility_tier, value: FULLY_DEDUCTIBLE}
+              - column: {name: deductibility_percentage, valueNumeric: 100}
+              - column: {name: schedule_line, value: "16a"}
+              - column: {name: tax_form, value: SCHEDULE_C}
+              - column: {name: requires_human_review, valueBoolean: false}
+              - column: {name: is_active, valueBoolean: true}
+
+        - insert:
+            tableName: tax_categories
+            columns:
+              - column: {name: code, value: EXPENSE_TAXES_LICENSES}
+              - column: {name: parent_code, value: EXPENSE}
+              - column: {name: name, value: "Expenses > Taxes & Licenses"}
+              - column: {name: description, value: "Business licenses, state/local taxes paid. Personal income taxes NOT deductible here."}
+              - column: {name: deductibility_tier, value: FULLY_DEDUCTIBLE}
+              - column: {name: deductibility_percentage, valueNumeric: 100}
+              - column: {name: schedule_line, value: "23"}
+              - column: {name: tax_form, value: SCHEDULE_C}
+              - column: {name: requires_human_review, valueBoolean: false}
+              - column: {name: is_active, valueBoolean: true}
+
+        - insert:
+            tableName: tax_categories
+            columns:
+              - column: {name: code, value: EXPENSE_MARKETING}
+              - column: {name: parent_code, value: EXPENSE}
+              - column: {name: name, value: "Expenses > Marketing & Promotion"}
+              - column: {name: deductibility_tier, value: FULLY_DEDUCTIBLE}
+              - column: {name: deductibility_percentage, valueNumeric: 100}
+              - column: {name: schedule_line, value: "8"}
+              - column: {name: tax_form, value: SCHEDULE_C}
+              - column: {name: requires_human_review, valueBoolean: false}
+              - column: {name: is_active, valueBoolean: true}
+
+        - insert:
+            tableName: tax_categories
+            columns:
+              - column: {name: code, value: EXPENSE_BANK_FEES}
+              - column: {name: parent_code, value: EXPENSE}
+              - column: {name: name, value: "Expenses > Bank & Financial Fees"}
+              - column: {name: deductibility_tier, value: FULLY_DEDUCTIBLE}
+              - column: {name: deductibility_percentage, valueNumeric: 100}
+              - column: {name: schedule_line, value: "27a"}
+              - column: {name: tax_form, value: SCHEDULE_C}
+              - column: {name: requires_human_review, valueBoolean: false}
+              - column: {name: is_active, valueBoolean: true}
+
+        - insert:
+            tableName: tax_categories
+            columns:
+              - column: {name: code, value: EXPENSE_UNCATEGORIZED}
+              - column: {name: parent_code, value: EXPENSE}
+              - column: {name: name, value: "Expenses > Uncategorized (Review Required)"}
+              - column: {name: deductibility_tier, value: FULLY_DEDUCTIBLE}
+              - column: {name: requires_human_review, valueBoolean: true}
+              - column: {name: is_active, valueBoolean: true}

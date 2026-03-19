@@ -1,0 +1,67 @@
+databaseChangeLog:
+  - changeSet:
+      id: 001-create-tenants
+      author: platform-engineering
+      changes:
+        - createTable:
+            tableName: tenants
+            columns:
+              - column:
+                  name: id
+                  type: UUID
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: name
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: status
+                  type: VARCHAR(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: tax_profile_id
+                  type: UUID
+              - column:
+                  name: api_key_hash
+                  type: VARCHAR(255)
+              - column:
+                  name: notification_email
+                  type: VARCHAR(255)
+              - column:
+                  name: notification_phone
+                  type: VARCHAR(50)
+              - column:
+                  name: created_at
+                  type: TIMESTAMPTZ
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: TIMESTAMPTZ
+                  constraints:
+                    nullable: false
+        - addDefaultValue:
+            tableName: tenants
+            columnName: created_at
+            defaultValueComputed: NOW()
+        - addDefaultValue:
+            tableName: tenants
+            columnName: updated_at
+            defaultValueComputed: NOW()
+        - createIndex:
+            tableName: tenants
+            indexName: idx_tenants_status
+            columns:
+              - column:
+                  name: status
+        - createIndex:
+            tableName: tenants
+            indexName: idx_tenants_api_key_hash
+            columns:
+              - column:
+                  name: api_key_hash
+            unique: true

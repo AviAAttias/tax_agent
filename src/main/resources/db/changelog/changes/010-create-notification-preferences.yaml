@@ -1,0 +1,55 @@
+databaseChangeLog:
+  - changeSet:
+      id: 010-create-notification-preferences
+      author: platform-engineering
+      changes:
+        - createTable:
+            tableName: notification_preferences
+            columns:
+              - column:
+                  name: id
+                  type: UUID
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: tenant_id
+                  type: UUID
+                  constraints:
+                    nullable: false
+              - column:
+                  name: event_type
+                  type: VARCHAR(100)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: channel
+                  type: VARCHAR(20)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: enabled
+                  type: BOOLEAN
+                  defaultValueBoolean: true
+                  constraints:
+                    nullable: false
+              - column:
+                  name: frequency
+                  type: VARCHAR(20)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: TIMESTAMPTZ
+                  constraints:
+                    nullable: false
+        - addUniqueConstraint:
+            tableName: notification_preferences
+            columnNames: tenant_id, event_type, channel
+            constraintName: uq_notification_preferences_tenant_event_channel
+        - createIndex:
+            tableName: notification_preferences
+            indexName: idx_notification_preferences_tenant_id
+            columns:
+              - column:
+                  name: tenant_id

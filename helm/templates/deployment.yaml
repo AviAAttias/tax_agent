@@ -1,0 +1,111 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "tax-assessment-service.fullname" . }}
+  labels:
+    {{- include "tax-assessment-service.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "tax-assessment-service.selectorLabels" . | nindent 6 }}
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0  # zero-downtime rolling deploy
+  template:
+    metadata:
+      annotations:
+        {{- toYaml .Values.podAnnotations | nindent 8 }}
+        checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+      labels:
+        {{- include "tax-assessment-service.selectorLabels" . | nindent 8 }}
+    spec:
+      serviceAccountName: {{ include "tax-assessment-service.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      # Vault CSI secret volume (§13)
+      volumes:
+        - name: vault-secrets
+          csi:
+            driver: secrets-store.csi.k8s.io
+            readOnly: true
+            volumeAttributes:
+              secretProviderClass: {{ include "tax-assessment-service.fullname" . }}-secrets
+        - name: tmp
+          emptyDir: {}
+      containers:
+        # ===== Application Container =====
+        - name: app
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+          env:
+            - name: SPRING_PROFILES_ACTIVE
+              value: {{ .Values.env.APP_ENVIRONMENT }}
+            - name: APP_ENVIRONMENT
+              value: {{ .Values.env.APP_ENVIRONMENT }}
+            # Connect to PgBouncer sidecar (§15.4)
+            - name: SPRING_DATASOURCE_URL
+              value: "jdbc:postgresql://localhost:5432/{{ .Values.pgbouncer.databaseName }}?prepareThreshold=0"
+          volumeMounts:
+            - name: vault-secrets
+              mountPath: /vault/secrets
+              readOnly: true
+            - name: tmp
+              mountPath: /tmp  # readOnlyRootFilesystem requires writable /tmp
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          livenessProbe:
+            {{- toYaml .Values.livenessProbe | nindent 12 }}
+          readinessProbe:
+            {{- toYaml .Values.readinessProbe | nindent 12 }}
+          startupProbe:
+            {{- toYaml .Values.startupProbe | nindent 12 }}
+
+        # ===== PgBouncer Sidecar (§15.4) =====
+        {{- if .Values.pgbouncer.enabled }}
+        - name: pgbouncer
+          image: {{ .Values.pgbouncer.image }}
+          ports:
+            - name: pgbouncer
+              containerPort: 5432
+              protocol: TCP
+          env:
+            - name: DATABASES_HOST
+              value: {{ .Values.pgbouncer.databaseHost | quote }}
+            - name: DATABASES_PORT
+              value: {{ .Values.pgbouncer.databasePort | quote }}
+            - name: DATABASES_DBNAME
+              value: {{ .Values.pgbouncer.databaseName | quote }}
+            - name: PGBOUNCER_POOL_MODE
+              value: {{ .Values.pgbouncer.poolMode | quote }}
+            - name: PGBOUNCER_MAX_CLIENT_CONN
+              value: {{ .Values.pgbouncer.maxClientConn | quote }}
+            - name: PGBOUNCER_DEFAULT_POOL_SIZE
+              value: {{ .Values.pgbouncer.defaultPoolSize | quote }}
+            - name: PGBOUNCER_AUTH_TYPE
+              value: scram-sha-256
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 200m
+              memory: 128Mi
+        {{- end }}
+
+      nodeSelector:
+        {{- toYaml .Values.nodeSelector | nindent 8 }}
+      tolerations:
+        {{- toYaml .Values.tolerations | nindent 8 }}
+      affinity:
+        {{- toYaml .Values.affinity | nindent 8 }}

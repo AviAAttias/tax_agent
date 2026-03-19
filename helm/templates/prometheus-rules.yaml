@@ -1,0 +1,82 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: {{ include "tax-assessment-service.fullname" . }}-alerts
+  labels:
+    {{- include "tax-assessment-service.labels" . | nindent 4 }}
+    prometheus: kube-prometheus
+    role: alert-rules
+spec:
+  groups:
+    - name: tax-assessment-service.critical
+      interval: 30s
+      rules:
+        # Agent DLQ depth alert (§10 — sample Prometheus alert rule)
+        - alert: AgentDlqDepthHigh
+          expr: |
+            sum(kafka_consumer_group_sum_lag{group=~"tax-assessment\\..*", topic=~"dlq\\..*"}) > 10
+          for: 5m
+          labels:
+            severity: critical
+          annotations:
+            summary: "Agent DLQ depth exceeds threshold"
+            description: "{{ $value }} messages in DLQ for tax-assessment consumer groups. Investigate agent failures."
+
+        # Processing latency p99 alert
+        - alert: PipelineProcessingLatencyHigh
+          expr: |
+            histogram_quantile(0.99,
+              sum(rate(pipeline_statements_processing_duration_seconds_bucket[5m])) by (le)
+            ) > 60
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Pipeline processing p99 latency > 60s"
+            description: "p99 statement processing latency is {{ $value }}s. Pipeline may be overloaded."
+
+        # Notification failure rate alert
+        - alert: NotificationFailureRateHigh
+          expr: |
+            rate(notifications_failed_total[5m])
+              / (rate(notifications_sent_total[5m]) + rate(notifications_failed_total[5m]))
+            > 0.05
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Notification failure rate > 5%"
+            description: "{{ $value | humanizePercentage }} of notifications are failing. Check Email/SMS provider."
+
+        # OpenAI circuit breaker open
+        - alert: OpenAiCircuitBreakerOpen
+          expr: |
+            resilience4j_circuitbreaker_state{name="openai-api", state="open"} == 1
+          for: 1m
+          labels:
+            severity: critical
+          annotations:
+            summary: "OpenAI circuit breaker is OPEN"
+            description: "AI categorization is disabled. Assessments will queue without categorization."
+
+        # Outbox poller lag
+        - alert: OutboxPublishLag
+          expr: |
+            count(outbox_events_unpublished_total) > 100
+          for: 2m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Outbox publish lag > 100 events"
+            description: "{{ $value }} events pending publication. Outbox poller may be failing."
+
+        # API error rate
+        - alert: ApiErrorRateHigh
+          expr: |
+            rate(api_errors_total{type="unexpected"}[5m]) > 0.1
+          for: 5m
+          labels:
+            severity: critical
+          annotations:
+            summary: "Unexpected API error rate elevated"
+            description: "{{ $value }} unexpected errors/second. Immediate investigation required."

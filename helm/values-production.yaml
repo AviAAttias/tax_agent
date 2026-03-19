@@ -1,0 +1,24 @@
+replicaCount: 3
+
+resources:
+  requests:
+    cpu: 500m
+    memory: 1Gi
+  limits:
+    cpu: 2000m
+    memory: 2Gi
+
+autoscaling:
+  enabled: true
+  minReplicas: 3
+  maxReplicas: 20
+  targetCPUUtilizationPercentage: 70
+
+env:
+  APP_ENVIRONMENT: production
+
+pgbouncer:
+  databaseHost: payments-db.postgres.svc.cluster.local
+  databaseName: tax_assessment_db
+  defaultPoolSize: 20
+  maxClientConn: 500

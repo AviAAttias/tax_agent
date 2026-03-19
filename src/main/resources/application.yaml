@@ -1,0 +1,247 @@
+spring:
+  application:
+    name: tax-assessment-service
+
+  profiles:
+    active: local
+
+  # JPA / Hibernate
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: false
+        default_batch_fetch_size: 25
+        jdbc:
+          time_zone: UTC
+
+  # Liquibase — lock mechanism handles concurrent pod startup safety (see §14.1)
+  liquibase:
+    enabled: true
+    change-log: classpath:db/changelog/db.changelog-master.yaml
+    lock-wait-time: 10
+
+  # DataSource defaults (overridden per environment)
+  datasource:
+    hikari:
+      maximum-pool-size: 5
+      minimum-idle: 2
+      connection-timeout: 3000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+      # Disable named prepared statements — required for PgBouncer transaction-mode compatibility (§15.3)
+      data-source-properties:
+        prepareThreshold: 0
+
+  # Kafka
+  kafka:
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      properties:
+        spring.json.add.type.headers: false
+        acks: all
+        enable.idempotence: true
+        max.in.flight.requests.per.connection: 5
+        retries: 3
+    consumer:
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      auto-offset-reset: earliest
+      enable-auto-commit: false
+      properties:
+        spring.json.trusted.packages: com.abco.taxassessment.event.domain
+    listener:
+      ack-mode: MANUAL_IMMEDIATE
+
+  # Security / OAuth2
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          # Populated per environment via Vault CSI
+          issuer-uri: ${JWT_ISSUER_URI}
+
+  # Jackson
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+    deserialization:
+      fail-on-unknown-properties: false
+    default-property-inclusion: non_null
+    time-zone: UTC
+
+  # Mail (SES-compatible SMTP)
+  mail:
+    host: ${MAIL_HOST:localhost}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
+# Actuator
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus,metrics
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: always
+      group:
+        liveness:
+          include: livenessState
+        readiness:
+          include: readinessState,db,kafka
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+    tags:
+      service: ${spring.application.name}
+      environment: ${app.environment:local}
+  tracing:
+    sampling:
+      probability: 1.0
+
+# OpenAPI / SpringDoc
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+  show-actuator: false
+
+# Resilience4j — explicit configuration required (§11)
+resilience4j:
+  circuitbreaker:
+    instances:
+      openai-api:
+        sliding-window-type: COUNT_BASED
+        sliding-window-size: 20
+        minimum-number-of-calls: 10
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 30s
+        permitted-number-of-calls-in-half-open-state: 5
+        automatic-transition-from-open-to-half-open-enabled: true
+      notification-email:
+        sliding-window-type: COUNT_BASED
+        sliding-window-size: 10
+        minimum-number-of-calls: 5
+        failure-rate-threshold: 60
+        wait-duration-in-open-state: 60s
+        permitted-number-of-calls-in-half-open-state: 3
+      notification-sms:
+        sliding-window-type: COUNT_BASED
+        sliding-window-size: 10
+        minimum-number-of-calls: 5
+        failure-rate-threshold: 60
+        wait-duration-in-open-state: 60s
+        permitted-number-of-calls-in-half-open-state: 3
+
+  retry:
+    instances:
+      openai-api:
+        max-attempts: 3
+        wait-duration: 1s
+        enable-exponential-backoff: true
+        exponential-backoff-multiplier: 2
+        randomized-wait-factor: 0.3
+        retry-exceptions:
+          - java.io.IOException
+          - org.springframework.web.client.ResourceAccessException
+          - com.abco.taxassessment.exception.OpenAiRateLimitException
+        ignore-exceptions:
+          - com.abco.taxassessment.exception.BusinessException
+          - com.abco.taxassessment.exception.OpenAiSchemaViolationException
+      notification-email:
+        max-attempts: 3
+        wait-duration: 500ms
+        enable-exponential-backoff: true
+        exponential-backoff-multiplier: 2
+        randomized-wait-factor: 0.3
+        retry-exceptions:
+          - java.io.IOException
+          - org.springframework.mail.MailException
+        ignore-exceptions:
+          - com.abco.taxassessment.exception.BusinessException
+      notification-sms:
+        max-attempts: 3
+        wait-duration: 500ms
+        enable-exponential-backoff: true
+        exponential-backoff-multiplier: 2
+        randomized-wait-factor: 0.3
+        retry-exceptions:
+          - java.io.IOException
+        ignore-exceptions:
+          - com.abco.taxassessment.exception.BusinessException
+
+  timelimiter:
+    instances:
+      openai-api:
+        timeout-duration: 30s
+        cancel-running-future: true
+      notification-email:
+        timeout-duration: 10s
+        cancel-running-future: true
+      notification-sms:
+        timeout-duration: 10s
+        cancel-running-future: true
+
+# Application-specific properties
+app:
+  environment: ${APP_ENVIRONMENT:local}
+  kafka:
+    topics:
+      statement-ingested: statement.ingested
+      document-classified: document.classified
+      text-extracted: text.extracted
+      transactions-parsed: transactions.parsed
+      transactions-categorized: transactions.categorized
+      tax-rules-applied: tax.rules.applied
+      reconciliation-complete: reconciliation.complete
+      assessment-aggregated: assessment.aggregated
+      anomalies-detected: anomalies.detected
+      assessment-finalized: assessment.finalized
+      dlq-prefix: dlq
+    consumer-groups:
+      document-classification: tax-assessment.document-classification
+      ocr-extraction: tax-assessment.ocr-extraction
+      transaction-parsing: tax-assessment.transaction-parsing
+      transaction-categorization: tax-assessment.transaction-categorization
+      tax-rule-application: tax-assessment.tax-rule-application
+      reconciliation: tax-assessment.reconciliation
+      assessment-aggregation: tax-assessment.assessment-aggregation
+      anomaly-detection: tax-assessment.anomaly-detection
+      assessment-finalization: tax-assessment.assessment-finalization
+      notification-dispatch: tax-assessment.notification-dispatch
+  openai:
+    api-key: ${OPENAI_API_KEY}
+    model: gpt-4o
+    max-tokens: 4096
+    temperature: 0.0
+  notification:
+    from-email: ${NOTIFICATION_FROM_EMAIL:noreply@taxassessment.abco.com}
+    from-name: "ABCO Tax Assessment"
+    twilio:
+      account-sid: ${TWILIO_ACCOUNT_SID}
+      auth-token: ${TWILIO_AUTH_TOKEN}
+      from-number: ${TWILIO_FROM_NUMBER}
+  outbox:
+    polling-interval-ms: 1000
+    batch-size: 100
+  agent:
+    confidence-threshold: 0.85
+    max-retry-attempts: 3
+  fx-rate:
+    base-currency: USD

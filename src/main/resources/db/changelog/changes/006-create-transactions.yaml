@@ -1,0 +1,148 @@
+databaseChangeLog:
+  - changeSet:
+      id: 006-create-transactions
+      author: platform-engineering
+      changes:
+        - createTable:
+            tableName: transactions
+            columns:
+              - column:
+                  name: id
+                  type: UUID
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: tenant_id
+                  type: UUID
+                  constraints:
+                    nullable: false
+              - column:
+                  name: statement_id
+                  type: UUID
+                  constraints:
+                    nullable: false
+              - column:
+                  name: transaction_date
+                  type: DATE
+                  constraints:
+                    nullable: false
+              - column:
+                  name: description
+                  type: VARCHAR(1000)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: amount
+                  type: DECIMAL(19,4)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: sign
+                  type: VARCHAR(10)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: running_balance
+                  type: DECIMAL(19,4)
+              - column:
+                  name: currency
+                  type: VARCHAR(3)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: base_currency_amount
+                  type: DECIMAL(19,4)
+              - column:
+                  name: fx_rate_applied
+                  type: DECIMAL(19,8)
+              - column:
+                  name: raw_line
+                  type: TEXT
+              - column:
+                  name: category_code
+                  type: VARCHAR(100)
+              - column:
+                  name: category_confidence
+                  type: DECIMAL(5,4)
+              - column:
+                  name: tax_treatment
+                  type: VARCHAR(50)
+              - column:
+                  name: deductible_amount
+                  type: DECIMAL(19,4)
+              - column:
+                  name: is_interaccount_transfer
+                  type: BOOLEAN
+                  defaultValueBoolean: false
+                  constraints:
+                    nullable: false
+              - column:
+                  name: is_flagged_for_review
+                  type: BOOLEAN
+                  defaultValueBoolean: false
+                  constraints:
+                    nullable: false
+              - column:
+                  name: review_reason
+                  type: VARCHAR(500)
+              - column:
+                  name: is_override_applied
+                  type: BOOLEAN
+                  defaultValueBoolean: false
+                  constraints:
+                    nullable: false
+              - column:
+                  name: override_category_code
+                  type: VARCHAR(100)
+              - column:
+                  name: status
+                  type: VARCHAR(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: TIMESTAMPTZ
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: TIMESTAMPTZ
+                  constraints:
+                    nullable: false
+        - createIndex:
+            tableName: transactions
+            indexName: idx_transactions_tenant_id
+            columns:
+              - column:
+                  name: tenant_id
+        - createIndex:
+            tableName: transactions
+            indexName: idx_transactions_tenant_statement
+            columns:
+              - column:
+                  name: tenant_id
+              - column:
+                  name: statement_id
+        - createIndex:
+            tableName: transactions
+            indexName: idx_transactions_tenant_date
+            columns:
+              - column:
+                  name: tenant_id
+              - column:
+                  name: transaction_date
+        - createIndex:
+            tableName: transactions
+            indexName: idx_transactions_tenant_category
+            columns:
+              - column:
+                  name: tenant_id
+              - column:
+                  name: category_code
+        - addForeignKeyConstraint:
+            baseTableName: transactions
+            baseColumnNames: statement_id
+            referencedTableName: statements
+            referencedColumnNames: id
+            constraintName: fk_transactions_statement

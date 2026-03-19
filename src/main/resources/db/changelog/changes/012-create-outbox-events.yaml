@@ -1,0 +1,102 @@
+databaseChangeLog:
+  - changeSet:
+      id: 012-create-outbox-events
+      author: platform-engineering
+      changes:
+        - createTable:
+            tableName: outbox_events
+            columns:
+              - column:
+                  name: id
+                  type: UUID
+                  defaultValueComputed: gen_random_uuid()
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: tenant_id
+                  type: UUID
+                  constraints:
+                    nullable: false
+              - column:
+                  name: aggregate_type
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: aggregate_id
+                  type: UUID
+                  constraints:
+                    nullable: false
+              - column:
+                  name: event_type
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: event_id
+                  type: VARCHAR(36)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: kafka_topic
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: kafka_key
+                  type: VARCHAR(255)
+              - column:
+                  name: occurred_at
+                  type: TIMESTAMPTZ
+                  defaultValueComputed: NOW()
+                  constraints:
+                    nullable: false
+              - column:
+                  name: version
+                  type: INTEGER
+                  constraints:
+                    nullable: false
+              - column:
+                  name: payload
+                  type: JSONB
+                  constraints:
+                    nullable: false
+              - column:
+                  name: published
+                  type: BOOLEAN
+                  defaultValueBoolean: false
+                  constraints:
+                    nullable: false
+              - column:
+                  name: published_at
+                  type: TIMESTAMPTZ
+              - column:
+                  name: publish_attempt_count
+                  type: INTEGER
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false
+              - column:
+                  name: last_publish_error
+                  type: TEXT
+        - addUniqueConstraint:
+            tableName: outbox_events
+            columnNames: event_id
+            constraintName: uq_outbox_events_event_id
+        - createIndex:
+            tableName: outbox_events
+            indexName: idx_outbox_events_unpublished
+            columns:
+              - column:
+                  name: published
+              - column:
+                  name: occurred_at
+        - createIndex:
+            tableName: outbox_events
+            indexName: idx_outbox_events_tenant_aggregate
+            columns:
+              - column:
+                  name: tenant_id
+              - column:
+                  name: aggregate_id

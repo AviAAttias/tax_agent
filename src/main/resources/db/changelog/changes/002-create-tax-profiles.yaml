@@ -1,0 +1,58 @@
+databaseChangeLog:
+  - changeSet:
+      id: 002-create-tax-profiles
+      author: platform-engineering
+      changes:
+        - createTable:
+            tableName: tax_profiles
+            columns:
+              - column:
+                  name: id
+                  type: UUID
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: tenant_id
+                  type: UUID
+                  constraints:
+                    nullable: false
+              - column:
+                  name: entity_type
+                  type: VARCHAR(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: fiscal_year_start_month
+                  type: VARCHAR(20)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: jurisdictions
+                  type: JSONB
+                  constraints:
+                    nullable: false
+              - column:
+                  name: accounting_method
+                  type: VARCHAR(20)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: naics_code
+                  type: VARCHAR(10)
+              - column:
+                  name: created_at
+                  type: TIMESTAMPTZ
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: TIMESTAMPTZ
+                  constraints:
+                    nullable: false
+        - createIndex:
+            tableName: tax_profiles
+            indexName: idx_tax_profiles_tenant_id
+            columns:
+              - column:
+                  name: tenant_id

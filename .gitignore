@@ -1,0 +1,32 @@
+target/
+*.class
+*.jar
+*.war
+*.ear
+
+# IDE
+.idea/
+*.iml
+*.iws
+.project
+.classpath
+.settings/
+.factorypath
+
+# Maven
+.mvn/timing.properties
+.mvn/wrapper/maven-wrapper.jar
+
+# Secrets — NEVER committed (§13)
+*.env
+.env
+application-local.properties
+**/secrets/
+vault/
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db

@@ -1,0 +1,29 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/tax_assessment_db?prepareThreshold=0
+    username: ${DB_USERNAME:tax_user}
+    password: ${DB_PASSWORD:tax_password}
+    hikari:
+      maximum-pool-size: 5
+  kafka:
+    bootstrap-servers: localhost:9092
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:8180/realms/tax-assessment
+
+management:
+  tracing:
+    sampling:
+      probability: 1.0
+
+app:
+  environment: local
+  openai:
+    api-key: ${OPENAI_API_KEY:test-key-override}
+
+logging:
+  level:
+    com.abco.taxassessment: DEBUG
+    org.hibernate.SQL: DEBUG

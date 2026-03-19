@@ -1,0 +1,158 @@
+databaseChangeLog:
+  # RLS policies — the authoritative isolation boundary (§8 Layer 2).
+  # Applied as Liquibase changesets — never ad-hoc scripts.
+  # ROLLBACK: Disabling RLS would be a security regression; rollback is intentionally not provided.
+  # Any removal of RLS requires a security review and explicit approval.
+
+  - changeSet:
+      id: 014-enable-rls-bank-accounts
+      author: platform-engineering
+      runOnChange: false
+      changes:
+        - sql:
+            sql: |
+              ALTER TABLE bank_accounts ENABLE ROW LEVEL SECURITY;
+              ALTER TABLE bank_accounts FORCE ROW LEVEL SECURITY;
+              CREATE POLICY tenant_isolation ON bank_accounts
+                USING (tenant_id = current_setting('app.tenant_id', true)::uuid);
+      rollback:
+        - sql:
+            sql: |
+              DROP POLICY IF EXISTS tenant_isolation ON bank_accounts;
+              ALTER TABLE bank_accounts DISABLE ROW LEVEL SECURITY;
+
+  - changeSet:
+      id: 014-enable-rls-statements
+      author: platform-engineering
+      runOnChange: false
+      changes:
+        - sql:
+            sql: |
+              ALTER TABLE statements ENABLE ROW LEVEL SECURITY;
+              ALTER TABLE statements FORCE ROW LEVEL SECURITY;
+              CREATE POLICY tenant_isolation ON statements
+                USING (tenant_id = current_setting('app.tenant_id', true)::uuid);
+      rollback:
+        - sql:
+            sql: |
+              DROP POLICY IF EXISTS tenant_isolation ON statements;
+              ALTER TABLE statements DISABLE ROW LEVEL SECURITY;
+
+  - changeSet:
+      id: 014-enable-rls-transactions
+      author: platform-engineering
+      runOnChange: false
+      changes:
+        - sql:
+            sql: |
+              ALTER TABLE transactions ENABLE ROW LEVEL SECURITY;
+              ALTER TABLE transactions FORCE ROW LEVEL SECURITY;
+              CREATE POLICY tenant_isolation ON transactions
+                USING (tenant_id = current_setting('app.tenant_id', true)::uuid);
+      rollback:
+        - sql:
+            sql: |
+              DROP POLICY IF EXISTS tenant_isolation ON transactions;
+              ALTER TABLE transactions DISABLE ROW LEVEL SECURITY;
+
+  - changeSet:
+      id: 014-enable-rls-tax-assessments
+      author: platform-engineering
+      runOnChange: false
+      changes:
+        - sql:
+            sql: |
+              ALTER TABLE tax_assessments ENABLE ROW LEVEL SECURITY;
+              ALTER TABLE tax_assessments FORCE ROW LEVEL SECURITY;
+              CREATE POLICY tenant_isolation ON tax_assessments
+                USING (tenant_id = current_setting('app.tenant_id', true)::uuid);
+      rollback:
+        - sql:
+            sql: |
+              DROP POLICY IF EXISTS tenant_isolation ON tax_assessments;
+              ALTER TABLE tax_assessments DISABLE ROW LEVEL SECURITY;
+
+  - changeSet:
+      id: 014-enable-rls-anomalies
+      author: platform-engineering
+      runOnChange: false
+      changes:
+        - sql:
+            sql: |
+              ALTER TABLE anomalies ENABLE ROW LEVEL SECURITY;
+              ALTER TABLE anomalies FORCE ROW LEVEL SECURITY;
+              CREATE POLICY tenant_isolation ON anomalies
+                USING (tenant_id = current_setting('app.tenant_id', true)::uuid);
+      rollback:
+        - sql:
+            sql: |
+              DROP POLICY IF EXISTS tenant_isolation ON anomalies;
+              ALTER TABLE anomalies DISABLE ROW LEVEL SECURITY;
+
+  - changeSet:
+      id: 014-enable-rls-notification-events
+      author: platform-engineering
+      runOnChange: false
+      changes:
+        - sql:
+            sql: |
+              ALTER TABLE notification_events ENABLE ROW LEVEL SECURITY;
+              ALTER TABLE notification_events FORCE ROW LEVEL SECURITY;
+              CREATE POLICY tenant_isolation ON notification_events
+                USING (tenant_id = current_setting('app.tenant_id', true)::uuid);
+      rollback:
+        - sql:
+            sql: |
+              DROP POLICY IF EXISTS tenant_isolation ON notification_events;
+              ALTER TABLE notification_events DISABLE ROW LEVEL SECURITY;
+
+  - changeSet:
+      id: 014-enable-rls-agent-jobs
+      author: platform-engineering
+      runOnChange: false
+      changes:
+        - sql:
+            sql: |
+              ALTER TABLE agent_jobs ENABLE ROW LEVEL SECURITY;
+              ALTER TABLE agent_jobs FORCE ROW LEVEL SECURITY;
+              CREATE POLICY tenant_isolation ON agent_jobs
+                USING (tenant_id = current_setting('app.tenant_id', true)::uuid);
+      rollback:
+        - sql:
+            sql: |
+              DROP POLICY IF EXISTS tenant_isolation ON agent_jobs;
+              ALTER TABLE agent_jobs DISABLE ROW LEVEL SECURITY;
+
+  - changeSet:
+      id: 014-enable-rls-tax-profiles
+      author: platform-engineering
+      runOnChange: false
+      changes:
+        - sql:
+            sql: |
+              ALTER TABLE tax_profiles ENABLE ROW LEVEL SECURITY;
+              ALTER TABLE tax_profiles FORCE ROW LEVEL SECURITY;
+              CREATE POLICY tenant_isolation ON tax_profiles
+                USING (tenant_id = current_setting('app.tenant_id', true)::uuid);
+      rollback:
+        - sql:
+            sql: |
+              DROP POLICY IF EXISTS tenant_isolation ON tax_profiles;
+              ALTER TABLE tax_profiles DISABLE ROW LEVEL SECURITY;
+
+  - changeSet:
+      id: 014-enable-rls-notification-preferences
+      author: platform-engineering
+      runOnChange: false
+      changes:
+        - sql:
+            sql: |
+              ALTER TABLE notification_preferences ENABLE ROW LEVEL SECURITY;
+              ALTER TABLE notification_preferences FORCE ROW LEVEL SECURITY;
+              CREATE POLICY tenant_isolation ON notification_preferences
+                USING (tenant_id = current_setting('app.tenant_id', true)::uuid);
+      rollback:
+        - sql:
+            sql: |
+              DROP POLICY IF EXISTS tenant_isolation ON notification_preferences;
+              ALTER TABLE notification_preferences DISABLE ROW LEVEL SECURITY;

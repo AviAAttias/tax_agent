@@ -1,0 +1,95 @@
+databaseChangeLog:
+  - changeSet:
+      id: 009-create-notification-events
+      author: platform-engineering
+      changes:
+        - createTable:
+            tableName: notification_events
+            columns:
+              - column:
+                  name: id
+                  type: UUID
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: tenant_id
+                  type: UUID
+                  constraints:
+                    nullable: false
+              - column:
+                  name: event_type
+                  type: VARCHAR(100)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: channel
+                  type: VARCHAR(20)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: recipient
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: status
+                  type: VARCHAR(20)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: payload
+                  type: JSONB
+                  constraints:
+                    nullable: false
+              - column:
+                  name: sent_at
+                  type: TIMESTAMPTZ
+              - column:
+                  name: failure_reason
+                  type: VARCHAR(1000)
+              - column:
+                  name: provider_message_id
+                  type: VARCHAR(255)
+              - column:
+                  name: attempt_count
+                  type: INTEGER
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false
+              - column:
+                  name: digest_group_id
+                  type: UUID
+              - column:
+                  name: idempotency_key
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: TIMESTAMPTZ
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: TIMESTAMPTZ
+                  constraints:
+                    nullable: false
+        - addUniqueConstraint:
+            tableName: notification_events
+            columnNames: idempotency_key
+            constraintName: uq_notification_events_idempotency_key
+        - createIndex:
+            tableName: notification_events
+            indexName: idx_notification_events_tenant_id
+            columns:
+              - column:
+                  name: tenant_id
+        - createIndex:
+            tableName: notification_events
+            indexName: idx_notification_events_tenant_status
+            columns:
+              - column:
+                  name: tenant_id
+              - column:
+                  name: status

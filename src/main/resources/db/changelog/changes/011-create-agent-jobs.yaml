@@ -1,0 +1,89 @@
+databaseChangeLog:
+  - changeSet:
+      id: 011-create-agent-jobs
+      author: platform-engineering
+      changes:
+        - createTable:
+            tableName: agent_jobs
+            columns:
+              - column:
+                  name: id
+                  type: UUID
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: tenant_id
+                  type: UUID
+                  constraints:
+                    nullable: false
+              - column:
+                  name: statement_id
+                  type: UUID
+                  constraints:
+                    nullable: false
+              - column:
+                  name: agent_name
+                  type: VARCHAR(100)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: status
+                  type: VARCHAR(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: attempt_count
+                  type: INTEGER
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false
+              - column:
+                  name: last_error
+                  type: TEXT
+              - column:
+                  name: input_event_id
+                  type: VARCHAR(255)
+              - column:
+                  name: output_event_id
+                  type: VARCHAR(255)
+              - column:
+                  name: started_at
+                  type: TIMESTAMPTZ
+              - column:
+                  name: completed_at
+                  type: TIMESTAMPTZ
+              - column:
+                  name: created_at
+                  type: TIMESTAMPTZ
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: TIMESTAMPTZ
+                  constraints:
+                    nullable: false
+        - createIndex:
+            tableName: agent_jobs
+            indexName: idx_agent_jobs_tenant_statement
+            columns:
+              - column:
+                  name: tenant_id
+              - column:
+                  name: statement_id
+        - createIndex:
+            tableName: agent_jobs
+            indexName: idx_agent_jobs_tenant_status
+            columns:
+              - column:
+                  name: tenant_id
+              - column:
+                  name: status
+        - createIndex:
+            tableName: agent_jobs
+            indexName: idx_agent_jobs_dlq_monitoring
+            columns:
+              - column:
+                  name: status
+              - column:
+                  name: created_at

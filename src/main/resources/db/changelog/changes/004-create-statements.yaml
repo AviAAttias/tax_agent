@@ -1,0 +1,125 @@
+databaseChangeLog:
+  - changeSet:
+      id: 004-create-statements
+      author: platform-engineering
+      changes:
+        - createTable:
+            tableName: statements
+            columns:
+              - column:
+                  name: id
+                  type: UUID
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: tenant_id
+                  type: UUID
+                  constraints:
+                    nullable: false
+              - column:
+                  name: account_id
+                  type: UUID
+                  constraints:
+                    nullable: false
+              - column:
+                  name: period_start
+                  type: DATE
+                  constraints:
+                    nullable: false
+              - column:
+                  name: period_end
+                  type: DATE
+                  constraints:
+                    nullable: false
+              - column:
+                  name: status
+                  type: VARCHAR(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: source_format
+                  type: VARCHAR(20)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: was_partial
+                  type: BOOLEAN
+                  defaultValueBoolean: false
+                  constraints:
+                    nullable: false
+              - column:
+                  name: file_path_encrypted
+                  type: VARCHAR(1024)
+              - column:
+                  name: file_hash
+                  type: VARCHAR(64)
+              - column:
+                  name: original_filename
+                  type: VARCHAR(512)
+              - column:
+                  name: file_size_bytes
+                  type: BIGINT
+              - column:
+                  name: transaction_count
+                  type: INTEGER
+              - column:
+                  name: failure_reason
+                  type: TEXT
+              - column:
+                  name: is_amendment
+                  type: BOOLEAN
+                  defaultValueBoolean: false
+                  constraints:
+                    nullable: false
+              - column:
+                  name: amends_statement_id
+                  type: UUID
+              - column:
+                  name: version
+                  type: INTEGER
+                  defaultValueNumeric: 1
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: TIMESTAMPTZ
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: TIMESTAMPTZ
+                  constraints:
+                    nullable: false
+        - createIndex:
+            tableName: statements
+            indexName: idx_statements_tenant_id
+            columns:
+              - column:
+                  name: tenant_id
+        - createIndex:
+            tableName: statements
+            indexName: idx_statements_tenant_account
+            columns:
+              - column:
+                  name: tenant_id
+              - column:
+                  name: account_id
+        - createIndex:
+            tableName: statements
+            indexName: idx_statements_tenant_period
+            columns:
+              - column:
+                  name: tenant_id
+              - column:
+                  name: period_start
+              - column:
+                  name: period_end
+        - createIndex:
+            tableName: statements
+            indexName: idx_statements_file_hash
+            columns:
+              - column:
+                  name: tenant_id
+              - column:
+                  name: file_hash

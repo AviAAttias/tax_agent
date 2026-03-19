@@ -1,0 +1,55 @@
+databaseChangeLog:
+  - changeSet:
+      id: 005-create-tax-categories
+      author: platform-engineering
+      changes:
+        - createTable:
+            tableName: tax_categories
+            columns:
+              - column:
+                  name: code
+                  type: VARCHAR(100)
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: parent_code
+                  type: VARCHAR(100)
+              - column:
+                  name: name
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: description
+                  type: VARCHAR(1000)
+              - column:
+                  name: deductibility_tier
+                  type: VARCHAR(50)
+              - column:
+                  name: deductibility_percentage
+                  type: DECIMAL(5,2)
+              - column:
+                  name: schedule_line
+                  type: VARCHAR(20)
+              - column:
+                  name: tax_form
+                  type: VARCHAR(50)
+              - column:
+                  name: requires_human_review
+                  type: BOOLEAN
+                  defaultValueBoolean: false
+                  constraints:
+                    nullable: false
+              - column:
+                  name: is_active
+                  type: BOOLEAN
+                  defaultValueBoolean: true
+                  constraints:
+                    nullable: false
+        - addForeignKeyConstraint:
+            baseTableName: tax_categories
+            baseColumnNames: parent_code
+            referencedTableName: tax_categories
+            referencedColumnNames: code
+            constraintName: fk_tax_categories_parent

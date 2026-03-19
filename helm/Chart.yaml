@@ -1,0 +1,9 @@
+apiVersion: v2
+name: tax-assessment-service
+description: Multi-Tenant Bank Statement Tax Assessment Platform
+type: application
+version: 1.0.0
+appVersion: "1.0.0"
+maintainers:
+  - name: ABCO Platform Engineering
+    email: platform@abco.com

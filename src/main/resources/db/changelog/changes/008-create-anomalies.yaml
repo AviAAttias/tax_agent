@@ -1,0 +1,97 @@
+databaseChangeLog:
+  - changeSet:
+      id: 008-create-anomalies
+      author: platform-engineering
+      changes:
+        - createTable:
+            tableName: anomalies
+            columns:
+              - column:
+                  name: id
+                  type: UUID
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: tenant_id
+                  type: UUID
+                  constraints:
+                    nullable: false
+              - column:
+                  name: transaction_id
+                  type: UUID
+                  constraints:
+                    nullable: false
+              - column:
+                  name: assessment_id
+                  type: UUID
+              - column:
+                  name: anomaly_type
+                  type: VARCHAR(100)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: severity
+                  type: VARCHAR(20)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: detail
+                  type: TEXT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: recommended_action
+                  type: VARCHAR(1000)
+              - column:
+                  name: status
+                  type: VARCHAR(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: resolved_at
+                  type: TIMESTAMPTZ
+              - column:
+                  name: resolved_by_user_id
+                  type: UUID
+              - column:
+                  name: resolution_note
+                  type: VARCHAR(1000)
+              - column:
+                  name: notification_sent
+                  type: BOOLEAN
+                  defaultValueBoolean: false
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: TIMESTAMPTZ
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: TIMESTAMPTZ
+                  constraints:
+                    nullable: false
+        - createIndex:
+            tableName: anomalies
+            indexName: idx_anomalies_tenant_id
+            columns:
+              - column:
+                  name: tenant_id
+        - createIndex:
+            tableName: anomalies
+            indexName: idx_anomalies_tenant_status
+            columns:
+              - column:
+                  name: tenant_id
+              - column:
+                  name: status
+        - createIndex:
+            tableName: anomalies
+            indexName: idx_anomalies_tenant_severity
+            columns:
+              - column:
+                  name: tenant_id
+              - column:
+                  name: severity

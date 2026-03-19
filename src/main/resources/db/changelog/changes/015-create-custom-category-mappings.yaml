@@ -1,0 +1,73 @@
+databaseChangeLog:
+  - changeSet:
+      id: 015-create-custom-category-mappings
+      author: platform-engineering
+      changes:
+        - createTable:
+            tableName: custom_category_mappings
+            columns:
+              - column:
+                  name: id
+                  type: UUID
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: tenant_id
+                  type: UUID
+                  constraints:
+                    nullable: false
+              - column:
+                  name: description_pattern
+                  type: VARCHAR(500)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: match_type
+                  type: VARCHAR(20)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: category_code
+                  type: VARCHAR(100)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: is_active
+                  type: BOOLEAN
+                  defaultValueBoolean: true
+                  constraints:
+                    nullable: false
+              - column:
+                  name: priority
+                  type: INTEGER
+                  defaultValueNumeric: 100
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: TIMESTAMPTZ
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: TIMESTAMPTZ
+                  constraints:
+                    nullable: false
+        - createIndex:
+            tableName: custom_category_mappings
+            indexName: idx_custom_category_mappings_tenant
+            columns:
+              - column:
+                  name: tenant_id
+              - column:
+                  name: is_active
+        - sql:
+            sql: |
+              ALTER TABLE custom_category_mappings ENABLE ROW LEVEL SECURITY;
+              ALTER TABLE custom_category_mappings FORCE ROW LEVEL SECURITY;
+              CREATE POLICY tenant_isolation ON custom_category_mappings
+                USING (tenant_id = current_setting('app.tenant_id', true)::uuid);
+      rollback:
+        - dropTable:
+            tableName: custom_category_mappings

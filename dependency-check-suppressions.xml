@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<suppressions xmlns="https://jeremylong.github.io/DependencyCheck/dependency-suppression.1.3.xsd">
+    <!--
+    Add CVE suppressions here with documented justification.
+    Format:
+    <suppress>
+        <notes>CVE-XXXX-YYYY: [Reason not exploitable in our configuration]</notes>
+        <cve>CVE-XXXX-YYYY</cve>
+    </suppress>
+    -->
+</suppressions>
