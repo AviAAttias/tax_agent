@@ -37,6 +37,9 @@
         <kafka.version>3.9.0</kafka.version>
         <httpclient5.version>5.4.3</httpclient5.version>
         <angus-mail.version>2.0.4</angus-mail.version>
+        <!-- Disable OSS Index analyzer — requires credentials not available here;
+             NVD-based analysis is sufficient for the CVSS>=7 security gate. -->
+        <ossIndexAnalyzerEnabled>false</ossIndexAnalyzerEnabled>
     </properties>
 
     <dependencies>
