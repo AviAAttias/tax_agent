@@ -6,6 +6,8 @@ import com.tngtech.archunit.junit.ArchTest;
 import com.tngtech.archunit.lang.ArchRule;
 import jakarta.persistence.Entity;
 
+import static com.tngtech.archunit.base.DescribedPredicate.not;
+import static com.tngtech.archunit.core.domain.JavaClass.Predicates.ABSTRACT;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
 
@@ -103,6 +105,6 @@ public class ArchitectureTest {
     static final ArchRule domain_services_must_be_annotated =
         classes().that().resideInAPackage("..domain.service..")
             .and().haveNameMatching(".*Service")
-            .and().areNotAbstract()
+            .and(not(ABSTRACT))
             .should().beAnnotatedWith(org.springframework.stereotype.Service.class);
 }
