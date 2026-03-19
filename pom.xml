@@ -322,8 +322,9 @@
                 <configuration>
                     <failBuildOnCVSS>7</failBuildOnCVSS>
                     <suppressionFile>dependency-check-suppressions.xml</suppressionFile>
-                    <!-- OSS Index requires authenticated credentials not available in this environment;
-                         NVD (RetireJS + CPE analysis) is sufficient for our security gate. -->
+                    <!-- Core-library properties file disables OSS Index (analyzer.ossindex.enabled=false).
+                         ossIndexAnalyzerEnabled kept as belt-and-suspenders. -->
+                    <propertyFile>dependency-check.properties</propertyFile>
                     <ossIndexAnalyzerEnabled>false</ossIndexAnalyzerEnabled>
                 </configuration>
             </plugin>
