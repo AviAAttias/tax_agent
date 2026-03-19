@@ -206,9 +206,8 @@ public class AssessmentService {
                 saved.getTotalIncome(),
                 saved.getTotalExpenses(),
                 saved.getNetProfitLoss(),
-                transactionRepository.countByTenantIdAndStatementId(effectiveTenantId,
-                                                                      saved.getStatementId())
-                        .intValue()
+                (int) transactionRepository.countByTenantIdAndStatementId(effectiveTenantId,
+                                                                           saved.getStatementId())
         );
 
         try {
