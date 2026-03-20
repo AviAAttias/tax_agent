@@ -65,6 +65,12 @@ class StatementControllerIntegrationTest {
         registry.add("spring.datasource.password", postgres::getPassword);
         registry.add("spring.kafka.bootstrap-servers", kafka::getBootstrapServers);
         registry.add("app.kafka.replication-factor", () -> "1");
+        // Disable pipeline consumers — this test covers the API layer only.
+        // Allowing consumers to start causes StatementPipelineConsumer to invoke
+        // the full AI pipeline (OpenAI, agent_jobs queries) asynchronously after
+        // the test assertions complete, leading to SQLSTATE 57P01 when the
+        // PostgreSQL Testcontainer shuts down mid-execution.
+        registry.add("spring.kafka.listener.auto-startup", () -> "false");
         // Disable Vault CSI for tests
         registry.add("spring.config.import", () -> "");
         registry.add("app.openai.api-key", () -> "test-key");
