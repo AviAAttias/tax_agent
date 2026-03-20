@@ -20,7 +20,7 @@ spec:
             severity: critical
           annotations:
             summary: "Agent DLQ depth exceeds threshold"
-            description: "{{ $value }} messages in DLQ for tax-assessment consumer groups. Investigate agent failures."
+            description: "{{"{{"}} $value {{"}}"}} messages in DLQ for tax-assessment consumer groups. Investigate agent failures."
 
         # Processing latency p99 alert
         - alert: PipelineProcessingLatencyHigh
@@ -33,7 +33,7 @@ spec:
             severity: warning
           annotations:
             summary: "Pipeline processing p99 latency > 60s"
-            description: "p99 statement processing latency is {{ $value }}s. Pipeline may be overloaded."
+            description: "p99 statement processing latency is {{"{{"}} $value {{"}}"}}s. Pipeline may be overloaded."
 
         # Notification failure rate alert
         - alert: NotificationFailureRateHigh
@@ -46,7 +46,7 @@ spec:
             severity: warning
           annotations:
             summary: "Notification failure rate > 5%"
-            description: "{{ $value | humanizePercentage }} of notifications are failing. Check Email/SMS provider."
+            description: "{{"{{"}} $value | humanizePercentage {{"}}"}} of notifications are failing. Check Email/SMS provider."
 
         # OpenAI circuit breaker open
         - alert: OpenAiCircuitBreakerOpen
@@ -68,7 +68,7 @@ spec:
             severity: warning
           annotations:
             summary: "Outbox publish lag > 100 events"
-            description: "{{ $value }} events pending publication. Outbox poller may be failing."
+            description: "{{"{{"}} $value {{"}}"}} events pending publication. Outbox poller may be failing."
 
         # API error rate
         - alert: ApiErrorRateHigh
@@ -79,4 +79,4 @@ spec:
             severity: critical
           annotations:
             summary: "Unexpected API error rate elevated"
-            description: "{{ $value }} unexpected errors/second. Immediate investigation required."
+            description: "{{"{{"}} $value {{"}}"}} unexpected errors/second. Immediate investigation required."
