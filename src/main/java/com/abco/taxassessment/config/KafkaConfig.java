@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.kafka.KafkaProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
 import org.springframework.kafka.config.TopicBuilder;
 import org.springframework.kafka.core.ConsumerFactory;
@@ -45,6 +46,23 @@ public class KafkaConfig {
     public KafkaConfig(AppProperties appProperties, KafkaProperties kafkaProperties) {
         this.kafka = appProperties.kafka();
         this.kafkaProperties = kafkaProperties;
+    }
+
+    // ===== Primary KafkaTemplate (JsonSerializer) =====
+    //
+    // Explicitly defined because defining outboxKafkaTemplate (a KafkaTemplate<String,String>)
+    // satisfies Spring Boot's @ConditionalOnMissingBean(KafkaTemplate.class), preventing
+    // auto-configuration of the standard KafkaTemplate. Agent services (AbstractAgentService,
+    // TransactionCategorizationService) inject this unqualified bean.
+    //
+    // Spring Boot auto-configures ProducerFactory<?,?> via KafkaAutoConfiguration since we do
+    // not define our own ProducerFactory bean; we inject it here by its wildcard type and cast.
+
+    @Bean
+    @Primary
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    public KafkaTemplate<String, Object> kafkaTemplate(ProducerFactory<?, ?> kafkaProducerFactory) {
+        return new KafkaTemplate<>((ProducerFactory<String, Object>) kafkaProducerFactory);
     }
 
     // ===== Outbox Producer (StringSerializer) =====
@@ -88,14 +106,14 @@ public class KafkaConfig {
     @Bean
     public ConcurrentKafkaListenerContainerFactory<?, ?> kafkaListenerContainerFactory(
             ConsumerFactory<?, ?> consumerFactory,
-            @Qualifier("outboxKafkaTemplate") KafkaTemplate<String, String> outboxKafkaTemplate) {
+            @Qualifier("kafkaTemplate") KafkaTemplate<String, Object> kafkaTemplate) {
 
         ConcurrentKafkaListenerContainerFactory factory = new ConcurrentKafkaListenerContainerFactory<>();
         factory.setConsumerFactory(consumerFactory);
         factory.getContainerProperties().setAckMode(ContainerProperties.AckMode.MANUAL_IMMEDIATE);
 
         DeadLetterPublishingRecoverer recoverer = new DeadLetterPublishingRecoverer(
-                outboxKafkaTemplate,
+                kafkaTemplate,
                 (ConsumerRecord<?, ?> record, Exception ex) -> new TopicPartition(
                         kafka.topics().dlqPrefix() + "." + record.topic(), 0));
 
