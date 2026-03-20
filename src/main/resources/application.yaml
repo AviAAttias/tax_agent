@@ -22,7 +22,6 @@ spring:
   liquibase:
     enabled: true
     change-log: classpath:db/changelog/db.changelog-master.yaml
-    lock-wait-time: 10
 
   # DataSource defaults (overridden per environment)
   datasource:
