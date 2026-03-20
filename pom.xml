@@ -7,7 +7,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.4.3</version>
+        <version>3.4.5</version>
         <relativePath/>
     </parent>
 
@@ -33,7 +33,14 @@
         <openai-java.version>0.9.0</openai-java.version>
         <twilio.version>10.6.1</twilio.version>
         <!-- Security patches: override versions bundled by Spring Boot parent -->
-        <tomcat.version>10.1.43</tomcat.version>
+        <!-- Tomcat: CVE-2025-48989 (10.1.44+), CVE-2025-55752 (10.1.45+) -->
+        <tomcat.version>10.1.45</tomcat.version>
+        <!-- Spring Framework: CVE-2025-41249 (6.2.11+) -->
+        <spring-framework.version>6.2.11</spring-framework.version>
+        <!-- Spring Security: CVE-2025-41232/CRITICAL (6.4.6+), CVE-2025-41248 (6.4.10+) -->
+        <spring-security.version>6.4.10</spring-security.version>
+        <!-- PostgreSQL JDBC: CVE-2025-49146 (42.7.7+) -->
+        <postgresql.version>42.7.7</postgresql.version>
         <kafka.version>3.9.0</kafka.version>
         <httpclient5.version>5.4.3</httpclient5.version>
         <angus-mail.version>2.0.4</angus-mail.version>
@@ -228,6 +235,13 @@
 
     <dependencyManagement>
         <dependencies>
+            <!-- lz4-java: CVE-2025-12183 (1.8.1+) — transitive via kafka-clients,
+                 not pinned by Spring Boot BOM -->
+            <dependency>
+                <groupId>org.lz4</groupId>
+                <artifactId>lz4-java</artifactId>
+                <version>1.8.1</version>
+            </dependency>
             <dependency>
                 <groupId>io.opentelemetry</groupId>
                 <artifactId>opentelemetry-bom</artifactId>

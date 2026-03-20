@@ -20,6 +20,10 @@ RUN java -Djarmode=layertools -jar app.jar extract
 # Using Eclipse Temurin JRE (non-root user, minimal attack surface per §18.1)
 FROM eclipse-temurin:21-jre-alpine
 
+# Upgrade Alpine packages to pick up latest OS-level security patches
+# (gnutls CVE-2026-1584, libexpat CVE-2026-32767, libpng CVE-2026-25646, zlib CVE-2026-22184)
+RUN apk upgrade --no-cache
+
 # Non-root user per security best practices
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 
