@@ -1,0 +1,10 @@
+# Trivy vulnerability suppressions
+# Each entry must include a documented reason and a review date.
+#
+# Format: <CVE-ID> [exp:<YYYY-MM-DD>]
+
+# CVE-2025-66566  lz4-java — Information Disclosure via Insufficient Output Buffer Clearing
+# Fixed version: 1.10.1 — NOT YET PUBLISHED to Maven Central as of 2026-03-20.
+# We are pinned to 1.8.1 (highest available release). Re-evaluate when 1.10.1 ships.
+# Review by: 2026-06-20
+CVE-2025-66566
