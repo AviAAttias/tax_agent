@@ -111,7 +111,7 @@ jobs:
         if: always()
         with:
           name: Integration Test Results
-          path: target/failsafe-reports/*.xml
+          path: target/failsafe-reports/TEST-*.xml
           reporter: java-junit
 
   # ===== Stage 5: Security Scan =====
