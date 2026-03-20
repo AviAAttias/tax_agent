@@ -2,10 +2,28 @@ package com.abco.taxassessment.config;
 
 import com.abco.taxassessment.config.properties.AppProperties;
 import org.apache.kafka.clients.admin.NewTopic;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.apache.kafka.clients.producer.ProducerConfig;
+import org.apache.kafka.common.TopicPartition;
+import org.apache.kafka.common.serialization.StringSerializer;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.boot.autoconfigure.kafka.KafkaProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
 import org.springframework.kafka.config.TopicBuilder;
+import org.springframework.kafka.core.ConsumerFactory;
+import org.springframework.kafka.core.DefaultKafkaProducerFactory;
 import org.springframework.kafka.core.KafkaAdmin;
+import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.kafka.core.ProducerFactory;
+import org.springframework.kafka.listener.ContainerProperties;
+import org.springframework.kafka.listener.DeadLetterPublishingRecoverer;
+import org.springframework.kafka.listener.DefaultErrorHandler;
+import org.springframework.util.backoff.ExponentialBackOff;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Kafka topic definitions for the agent pipeline (§9).
@@ -22,9 +40,70 @@ import org.springframework.kafka.core.KafkaAdmin;
 public class KafkaConfig {
 
     private final AppProperties.KafkaProperties kafka;
+    private final KafkaProperties kafkaProperties;
 
-    public KafkaConfig(AppProperties appProperties) {
+    public KafkaConfig(AppProperties appProperties, KafkaProperties kafkaProperties) {
         this.kafka = appProperties.kafka();
+        this.kafkaProperties = kafkaProperties;
+    }
+
+    // ===== Outbox Producer (StringSerializer) =====
+    //
+    // The outbox pattern stores event payloads as pre-serialized JSON strings in the DB.
+    // Using JsonSerializer here would double-encode the String (wrapping it in extra quotes),
+    // making it impossible for the consumer to deserialize to StatementIngestedEvent.
+    // StringSerializer sends the raw UTF-8 JSON bytes — exactly what the consumer expects.
+
+    @Bean("outboxProducerFactory")
+    public ProducerFactory<String, String> outboxProducerFactory() {
+        Map<String, Object> props = new HashMap<>();
+        props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaProperties.getBootstrapServers());
+        props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
+        props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
+        props.put(ProducerConfig.ACKS_CONFIG, "all");
+        props.put(ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG, true);
+        props.put(ProducerConfig.MAX_IN_FLIGHT_REQUESTS_PER_CONNECTION, 5);
+        props.put(ProducerConfig.RETRIES_CONFIG, 3);
+        return new DefaultKafkaProducerFactory<>(props);
+    }
+
+    @Bean("outboxKafkaTemplate")
+    public KafkaTemplate<String, String> outboxKafkaTemplate(
+            @Qualifier("outboxProducerFactory") ProducerFactory<String, String> outboxProducerFactory) {
+        return new KafkaTemplate<>(outboxProducerFactory);
+    }
+
+    // ===== Listener Container Factory =====
+    //
+    // Overrides Spring Boot's auto-configured factory to add:
+    // - ExponentialBackOff (1s → 2s → 4s, max 3 attempts) before DLQ routing
+    // - DeadLetterPublishingRecoverer: routes poison-pill messages to dlq.<topic>
+    // - MANUAL_IMMEDIATE ack mode (consumers ack only after successful processing)
+    //
+    // The ErrorHandlingDeserializer configured in application.yaml ensures that
+    // deserialization failures are delivered to this error handler (as a header-enriched
+    // null-value record) rather than crashing the consumer thread.
+
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    @Bean
+    public ConcurrentKafkaListenerContainerFactory<?, ?> kafkaListenerContainerFactory(
+            ConsumerFactory<?, ?> consumerFactory,
+            @Qualifier("outboxKafkaTemplate") KafkaTemplate<String, String> outboxKafkaTemplate) {
+
+        ConcurrentKafkaListenerContainerFactory factory = new ConcurrentKafkaListenerContainerFactory<>();
+        factory.setConsumerFactory(consumerFactory);
+        factory.getContainerProperties().setAckMode(ContainerProperties.AckMode.MANUAL_IMMEDIATE);
+
+        DeadLetterPublishingRecoverer recoverer = new DeadLetterPublishingRecoverer(
+                outboxKafkaTemplate,
+                (ConsumerRecord<?, ?> record, Exception ex) -> new TopicPartition(
+                        kafka.topics().dlqPrefix() + "." + record.topic(), 0));
+
+        ExponentialBackOff backOff = new ExponentialBackOff(1_000L, 2.0);
+        backOff.setMaxAttempts(3);
+
+        factory.setCommonErrorHandler(new DefaultErrorHandler(recoverer, backOff));
+        return factory;
     }
 
     // ===== Agent Pipeline Topics =====

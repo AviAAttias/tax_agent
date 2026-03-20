@@ -41,17 +41,21 @@ spring:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
       properties:
-        spring.json.add.type.headers: false
         acks: all
         enable.idempotence: true
         max.in.flight.requests.per.connection: 5
         retries: 3
     consumer:
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      # ErrorHandlingDeserializer wraps JsonDeserializer so that SerializationExceptions are
+      # caught before they reach DefaultErrorHandler, enabling DLQ routing instead of crash loops.
+      value-deserializer: org.springframework.kafka.support.serializer.ErrorHandlingDeserializer
       auto-offset-reset: earliest
       enable-auto-commit: false
       properties:
+        spring.deserializer.value.delegate.class: org.springframework.kafka.support.serializer.JsonDeserializer
+        # Default type used when messages lack Spring type headers (e.g. outbox-published events).
+        spring.json.value.default.type: com.abco.taxassessment.event.domain.StatementIngestedEvent
         spring.json.trusted.packages: com.abco.taxassessment.event.domain
     listener:
       ack-mode: MANUAL_IMMEDIATE

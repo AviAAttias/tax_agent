@@ -4,6 +4,7 @@ import com.abco.taxassessment.config.properties.AppProperties;
 import io.micrometer.core.instrument.MeterRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.support.SendResult;
@@ -36,12 +37,12 @@ public class OutboxPoller {
     private static final Logger log = LoggerFactory.getLogger(OutboxPoller.class);
 
     private final OutboxEventRepository outboxEventRepository;
-    private final KafkaTemplate<String, Object> kafkaTemplate;
+    private final KafkaTemplate<String, String> kafkaTemplate;
     private final AppProperties appProperties;
     private final MeterRegistry meterRegistry;
 
     public OutboxPoller(OutboxEventRepository outboxEventRepository,
-                        KafkaTemplate<String, Object> kafkaTemplate,
+                        @Qualifier("outboxKafkaTemplate") KafkaTemplate<String, String> kafkaTemplate,
                         AppProperties appProperties,
                         MeterRegistry meterRegistry) {
         this.outboxEventRepository = outboxEventRepository;
@@ -73,7 +74,7 @@ public class OutboxPoller {
 
     private void publishEvent(OutboxEventEntity event) {
         try {
-            CompletableFuture<SendResult<String, Object>> future = kafkaTemplate.send(
+            CompletableFuture<SendResult<String, String>> future = kafkaTemplate.send(
                     event.getKafkaTopic(),
                     event.getKafkaKey(),
                     event.getPayload()
