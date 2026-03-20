@@ -1,10 +1,12 @@
 package com.abco.taxassessment.integration.api;
 
 import com.abco.taxassessment.domain.statement.domain.entity.StatementEntity;
+import com.abco.taxassessment.event.outbox.OutboxPoller;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors;
@@ -54,6 +56,13 @@ class StatementControllerIntegrationTest {
     static KafkaContainer kafka = new KafkaContainer(
             DockerImageName.parse("confluentinc/cp-kafka:7.6.0"))
             .withReuse(true);
+
+    // Suppress the OutboxPoller scheduler — this test covers the API layer only.
+    // Allowing the poller to run causes @Transactional commit failures (SQLSTATE 08006)
+    // when the PostgreSQL Testcontainer shuts down while a polling cycle is mid-commit.
+    @MockBean
+    @SuppressWarnings("unused")
+    OutboxPoller outboxPoller;
 
     @Autowired
     private MockMvc mockMvc;

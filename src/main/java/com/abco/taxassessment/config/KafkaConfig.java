@@ -110,6 +110,9 @@ public class KafkaConfig {
 
         ConcurrentKafkaListenerContainerFactory factory = new ConcurrentKafkaListenerContainerFactory<>();
         factory.setConsumerFactory(consumerFactory);
+        // Honour spring.kafka.listener.auto-startup (defaults true). Custom factories bypass
+        // Spring Boot's auto-configuration, so we must forward the property explicitly.
+        factory.setAutoStartup(kafkaProperties.getListener().isAutoStartup());
         factory.getContainerProperties().setAckMode(ContainerProperties.AckMode.MANUAL_IMMEDIATE);
 
         DeadLetterPublishingRecoverer recoverer = new DeadLetterPublishingRecoverer(
