@@ -5,8 +5,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import java.sql.Connection;
-import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.UUID;
 
 /**
@@ -26,8 +26,6 @@ public class TenantConnectionPreparer {
 
     private static final Logger log = LoggerFactory.getLogger(TenantConnectionPreparer.class);
 
-    private static final String SET_TENANT_SQL = "SET LOCAL app.tenant_id = ?";
-
     public void prepareConnection(Connection connection) throws SQLException {
         UUID tenantId = TenantContext.get();
         if (tenantId == null) {
@@ -35,9 +33,10 @@ public class TenantConnectionPreparer {
             // RLS blocks unauthorized access at DB level regardless.
             return;
         }
-        try (PreparedStatement stmt = connection.prepareStatement(SET_TENANT_SQL)) {
-            stmt.setString(1, tenantId.toString());
-            stmt.execute();
+        // PostgreSQL SET command does not accept parameterized queries ($1).
+        // UUID.toString() is safe to embed literally — format is [0-9a-f-]+ only.
+        try (Statement stmt = connection.createStatement()) {
+            stmt.execute("SET LOCAL app.tenant_id = '" + tenantId + "'");
             log.debug("Set DB session app.tenant_id = {}", tenantId);
         }
     }
