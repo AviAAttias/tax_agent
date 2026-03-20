@@ -1,6 +1,6 @@
 # Multi-stage Docker build (§18.1)
-# Stage 1: Build
-FROM eclipse-temurin:21-jdk-alpine AS builder
+# Stage 1: Build — use official Maven image that bundles JDK 21 + Maven 3.9
+FROM maven:3.9-eclipse-temurin-21-alpine AS builder
 WORKDIR /build
 
 # Cache dependencies layer — copy pom.xml first for layer caching

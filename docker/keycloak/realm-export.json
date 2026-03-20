@@ -1,0 +1,82 @@
+{
+  "realm": "tax-assessment",
+  "enabled": true,
+  "displayName": "ABCO Tax Assessment",
+  "sslRequired": "none",
+  "registrationAllowed": false,
+  "loginWithEmailAllowed": true,
+  "duplicateEmailsAllowed": false,
+  "accessTokenLifespan": 3600,
+  "roles": {
+    "realm": [
+      { "name": "ROLE_ADMIN",   "description": "Full access — manage tenants, users, assessments" },
+      { "name": "ROLE_ANALYST", "description": "Upload statements, trigger assessments, view results" },
+      { "name": "ROLE_VIEWER",  "description": "Read-only access to assessments and reports" }
+    ]
+  },
+  "clients": [
+    {
+      "clientId": "tax-assessment-web",
+      "name": "Tax Assessment Web Client",
+      "enabled": true,
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": true,
+      "redirectUris": [
+        "http://localhost:*",
+        "http://127.0.0.1:*"
+      ],
+      "webOrigins": [
+        "http://localhost:*",
+        "http://127.0.0.1:*"
+      ],
+      "defaultClientScopes": ["openid", "profile", "email", "roles"]
+    },
+    {
+      "clientId": "tax-assessment-service",
+      "name": "Tax Assessment Service (M2M)",
+      "enabled": true,
+      "publicClient": false,
+      "secret": "service-secret-change-in-prod",
+      "serviceAccountsEnabled": true,
+      "standardFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "defaultClientScopes": ["openid", "roles"]
+    }
+  ],
+  "users": [
+    {
+      "username": "admin-user",
+      "email": "admin@taxassessment.local",
+      "firstName": "Admin",
+      "lastName": "User",
+      "enabled": true,
+      "credentials": [
+        { "type": "password", "value": "admin123", "temporary": false }
+      ],
+      "realmRoles": ["ROLE_ADMIN"]
+    },
+    {
+      "username": "analyst-user",
+      "email": "analyst@taxassessment.local",
+      "firstName": "Analyst",
+      "lastName": "User",
+      "enabled": true,
+      "credentials": [
+        { "type": "password", "value": "analyst123", "temporary": false }
+      ],
+      "realmRoles": ["ROLE_ANALYST"]
+    },
+    {
+      "username": "viewer-user",
+      "email": "viewer@taxassessment.local",
+      "firstName": "Viewer",
+      "lastName": "User",
+      "enabled": true,
+      "credentials": [
+        { "type": "password", "value": "viewer123", "temporary": false }
+      ],
+      "realmRoles": ["ROLE_VIEWER"]
+    }
+  ]
+}
