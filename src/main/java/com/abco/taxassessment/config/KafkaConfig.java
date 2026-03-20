@@ -129,61 +129,61 @@ public class KafkaConfig {
     @Bean
     public NewTopic statementIngestedTopic() {
         return TopicBuilder.name(kafka.topics().statementIngested())
-                .partitions(12).replicas(3).build();
+                .partitions(12).replicas(kafka.replicationFactor()).build();
     }
 
     @Bean
     public NewTopic documentClassifiedTopic() {
         return TopicBuilder.name(kafka.topics().documentClassified())
-                .partitions(12).replicas(3).build();
+                .partitions(12).replicas(kafka.replicationFactor()).build();
     }
 
     @Bean
     public NewTopic textExtractedTopic() {
         return TopicBuilder.name(kafka.topics().textExtracted())
-                .partitions(12).replicas(3).build();
+                .partitions(12).replicas(kafka.replicationFactor()).build();
     }
 
     @Bean
     public NewTopic transactionsParsedTopic() {
         return TopicBuilder.name(kafka.topics().transactionsParsed())
-                .partitions(12).replicas(3).build();
+                .partitions(12).replicas(kafka.replicationFactor()).build();
     }
 
     @Bean
     public NewTopic transactionsCategorizeTopic() {
         return TopicBuilder.name(kafka.topics().transactionsCategorized())
-                .partitions(12).replicas(3).build();
+                .partitions(12).replicas(kafka.replicationFactor()).build();
     }
 
     @Bean
     public NewTopic taxRulesAppliedTopic() {
         return TopicBuilder.name(kafka.topics().taxRulesApplied())
-                .partitions(12).replicas(3).build();
+                .partitions(12).replicas(kafka.replicationFactor()).build();
     }
 
     @Bean
     public NewTopic reconciliationCompleteTopic() {
         return TopicBuilder.name(kafka.topics().reconciliationComplete())
-                .partitions(12).replicas(3).build();
+                .partitions(12).replicas(kafka.replicationFactor()).build();
     }
 
     @Bean
     public NewTopic assessmentAggregatedTopic() {
         return TopicBuilder.name(kafka.topics().assessmentAggregated())
-                .partitions(12).replicas(3).build();
+                .partitions(12).replicas(kafka.replicationFactor()).build();
     }
 
     @Bean
     public NewTopic anomaliesDetectedTopic() {
         return TopicBuilder.name(kafka.topics().anomaliesDetected())
-                .partitions(12).replicas(3).build();
+                .partitions(12).replicas(kafka.replicationFactor()).build();
     }
 
     @Bean
     public NewTopic assessmentFinalizedTopic() {
         return TopicBuilder.name(kafka.topics().assessmentFinalized())
-                .partitions(12).replicas(3).build();
+                .partitions(12).replicas(kafka.replicationFactor()).build();
     }
 
     // ===== DLQ Topics =====
@@ -191,48 +191,48 @@ public class KafkaConfig {
     @Bean
     public NewTopic statementIngestedDlq() {
         return TopicBuilder.name(kafka.topics().dlqPrefix() + "." + kafka.topics().statementIngested())
-                .partitions(3).replicas(3).build();
+                .partitions(3).replicas(kafka.replicationFactor()).build();
     }
 
     @Bean
     public NewTopic documentClassifiedDlq() {
         return TopicBuilder.name(kafka.topics().dlqPrefix() + "." + kafka.topics().documentClassified())
-                .partitions(3).replicas(3).build();
+                .partitions(3).replicas(kafka.replicationFactor()).build();
     }
 
     @Bean
     public NewTopic textExtractedDlq() {
         return TopicBuilder.name(kafka.topics().dlqPrefix() + "." + kafka.topics().textExtracted())
-                .partitions(3).replicas(3).build();
+                .partitions(3).replicas(kafka.replicationFactor()).build();
     }
 
     @Bean
     public NewTopic transactionsParsedDlq() {
         return TopicBuilder.name(kafka.topics().dlqPrefix() + "." + kafka.topics().transactionsParsed())
-                .partitions(3).replicas(3).build();
+                .partitions(3).replicas(kafka.replicationFactor()).build();
     }
 
     @Bean
     public NewTopic transactionsCategorizedDlq() {
         return TopicBuilder.name(kafka.topics().dlqPrefix() + "." + kafka.topics().transactionsCategorized())
-                .partitions(3).replicas(3).build();
+                .partitions(3).replicas(kafka.replicationFactor()).build();
     }
 
     @Bean
     public NewTopic taxRulesAppliedDlq() {
         return TopicBuilder.name(kafka.topics().dlqPrefix() + "." + kafka.topics().taxRulesApplied())
-                .partitions(3).replicas(3).build();
+                .partitions(3).replicas(kafka.replicationFactor()).build();
     }
 
     @Bean
     public NewTopic reconciliationCompleteDlq() {
         return TopicBuilder.name(kafka.topics().dlqPrefix() + "." + kafka.topics().reconciliationComplete())
-                .partitions(3).replicas(3).build();
+                .partitions(3).replicas(kafka.replicationFactor()).build();
     }
 
     @Bean
     public NewTopic assessmentAggregatedDlq() {
         return TopicBuilder.name(kafka.topics().dlqPrefix() + "." + kafka.topics().assessmentAggregated())
-                .partitions(3).replicas(3).build();
+                .partitions(3).replicas(kafka.replicationFactor()).build();
     }
 }

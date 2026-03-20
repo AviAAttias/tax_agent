@@ -27,7 +27,8 @@ public record AppProperties(
 
     public record KafkaProperties(
             @NotNull @Valid TopicProperties topics,
-            @NotNull @Valid ConsumerGroupProperties consumerGroups
+            @NotNull @Valid ConsumerGroupProperties consumerGroups,
+            @Min(1) int replicationFactor
     ) {}
 
     public record TopicProperties(

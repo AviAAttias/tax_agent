@@ -20,6 +20,8 @@ management:
 
 app:
   environment: local
+  kafka:
+    replication-factor: 1
   openai:
     api-key: ${OPENAI_API_KEY:test-key-override}
 

@@ -205,6 +205,7 @@ resilience4j:
 app:
   environment: ${APP_ENVIRONMENT:local}
   kafka:
+    replication-factor: 3
     topics:
       statement-ingested: statement.ingested
       document-classified: document.classified
