@@ -1,6 +1,6 @@
 # Multi-stage Docker build (§18.1)
-# Stage 1: Build
-FROM eclipse-temurin:21-jdk-alpine AS builder
+# Stage 1: Build — use official Maven image that bundles JDK 21 + Maven 3.9
+FROM maven:3.9-eclipse-temurin-21-alpine AS builder
 WORKDIR /build
 
 # Cache dependencies layer — copy pom.xml first for layer caching
@@ -19,6 +19,10 @@ RUN java -Djarmode=layertools -jar app.jar extract
 # Stage 3: Runtime — minimal image
 # Using Eclipse Temurin JRE (non-root user, minimal attack surface per §18.1)
 FROM eclipse-temurin:21-jre-alpine
+
+# Upgrade Alpine packages to pick up latest OS-level security patches
+# (gnutls CVE-2026-1584, libexpat CVE-2026-32767, libpng CVE-2026-25646, zlib CVE-2026-22184)
+RUN apk upgrade --no-cache
 
 # Non-root user per security best practices
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup

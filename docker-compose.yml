@@ -1,0 +1,202 @@
+version: '3.9'
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Local development stack for tax-assessment-service
+#
+# Core services (always started):
+#   postgres    — PostgreSQL 16
+#   kafka       — Kafka 3.7 KRaft (no ZooKeeper)
+#   kafka-ui    — Kafka topic browser   → http://localhost:9080
+#   keycloak    — OAuth2 / JWT issuer   → http://localhost:8180
+#   mailhog     — SMTP capture + inbox  → http://localhost:8025
+#   app         — Spring Boot service   → http://localhost:8080
+#
+# Optional tools (start with: docker compose --profile tools up):
+#   pgadmin     — PostgreSQL UI         → http://localhost:5050
+#
+# Network note for Keycloak JWT:
+#   The app (inside Docker) talks to keycloak via the Docker network name
+#   "keycloak:8180". Tokens issued by Keycloak carry the same hostname as
+#   the URL used to request them. To get tokens from a browser / curl on
+#   your machine and have the app accept them, add this entry to /etc/hosts:
+#     127.0.0.1  keycloak
+#   Then fetch tokens from http://keycloak:8180/realms/tax-assessment/...
+#
+# Test users (created by realm-export.json):
+#   admin-user   / admin123   → ROLE_ADMIN
+#   analyst-user / analyst123 → ROLE_ANALYST
+#   viewer-user  / viewer123  → ROLE_VIEWER
+# ─────────────────────────────────────────────────────────────────────────────
+
+services:
+
+  # ─────────────────── PostgreSQL ───────────────────────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: tax_assessment_db
+      POSTGRES_USER: ${DB_USERNAME:-tax_user}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-tax_password}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-tax_user} -d tax_assessment_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ─────────────────── Kafka 3.7 — KRaft mode (no ZooKeeper) ───────────────
+  kafka:
+    image: bitnami/kafka:3.7
+    environment:
+      KAFKA_CFG_NODE_ID: 1
+      KAFKA_CFG_PROCESS_ROLES: broker,controller
+      KAFKA_CFG_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+      # PLAINTEXT  — internal Docker network (app → kafka)
+      # CONTROLLER — internal KRaft controller channel
+      # EXTERNAL   — host machine access (localhost:9094)
+      KAFKA_CFG_LISTENERS: PLAINTEXT://:9092,CONTROLLER://:9093,EXTERNAL://:9094
+      KAFKA_CFG_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,EXTERNAL://localhost:9094
+      KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT,EXTERNAL:PLAINTEXT
+      KAFKA_CFG_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_CFG_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE: "true"
+      # 1 partition / 1 replica for local dev (prod uses 12 / 3)
+      KAFKA_CFG_NUM_PARTITIONS: 1
+      KAFKA_CFG_DEFAULT_REPLICATION_FACTOR: 1
+    ports:
+      - "9094:9094"    # use localhost:9094 from your machine
+    volumes:
+      - kafka_data:/bitnami/kafka
+    healthcheck:
+      test: ["CMD-SHELL", "kafka-topics.sh --bootstrap-server localhost:9092 --list"]
+      interval: 15s
+      timeout: 10s
+      start_period: 30s
+      retries: 5
+
+  # ─────────────────── Kafka UI ─────────────────────────────────────────────
+  kafka-ui:
+    image: ghcr.io/kafbat/kafka-ui:latest
+    environment:
+      KAFKA_CLUSTERS_0_NAME: local
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
+    ports:
+      - "9080:8080"
+    depends_on:
+      kafka:
+        condition: service_healthy
+
+  # ─────────────────── Keycloak — OAuth2 / JWT ──────────────────────────────
+  keycloak:
+    image: quay.io/keycloak/keycloak:24.0
+    # --import-realm auto-imports every JSON file under /opt/keycloak/data/import
+    command: start-dev --import-realm --http-port=8180
+    environment:
+      KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN:-admin}
+      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:-admin}
+      KC_HTTP_ENABLED: "true"
+      KC_HOSTNAME_STRICT: "false"
+      # Fix issuer hostname to "keycloak" so both the app (Docker network) and
+      # the host (via /etc/hosts) see consistent token issuers.
+      KC_HOSTNAME: keycloak
+    volumes:
+      - ./docker/keycloak:/opt/keycloak/data/import:ro
+      - keycloak_data:/opt/keycloak/data
+    ports:
+      - "8180:8180"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:8180/health/ready || exit 1"]
+      interval: 20s
+      timeout: 10s
+      start_period: 60s
+      retries: 6
+
+  # ─────────────────── MailHog — SMTP capture ───────────────────────────────
+  # All outbound mail is captured here; nothing is actually delivered.
+  # View received emails at http://localhost:8025
+  mailhog:
+    image: mailhog/mailhog:latest
+    ports:
+      - "1025:1025"   # SMTP (no auth — app is configured to skip auth)
+      - "8025:8025"   # Web inbox
+
+  # ─────────────────── Application ──────────────────────────────────────────
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: tax-assessment-service:local
+    environment:
+      SPRING_PROFILES_ACTIVE: local
+
+      # Database
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/tax_assessment_db?prepareThreshold=0
+      DB_USERNAME: ${DB_USERNAME:-tax_user}
+      DB_PASSWORD: ${DB_PASSWORD:-tax_password}
+
+      # Kafka — internal listener
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+
+      # JWT — issuer must match KC_HOSTNAME set on the keycloak service
+      JWT_ISSUER_URI: http://keycloak:8180/realms/tax-assessment
+
+      # Mail — point to MailHog; disable STARTTLS + auth (MailHog ignores them)
+      MAIL_HOST: mailhog
+      MAIL_PORT: 1025
+      MAIL_USERNAME: ""
+      MAIL_PASSWORD: ""
+      SPRING_MAIL_PROPERTIES_MAIL_SMTP_AUTH: "false"
+      SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_ENABLE: "false"
+
+      # OpenAI — set a real key to exercise the LLM pipeline
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-sk-placeholder}
+
+      # Notifications
+      NOTIFICATION_FROM_EMAIL: ${NOTIFICATION_FROM_EMAIL:-noreply@taxassessment.local}
+      TWILIO_ACCOUNT_SID: ${TWILIO_ACCOUNT_SID:-ACplaceholder}
+      TWILIO_AUTH_TOKEN: ${TWILIO_AUTH_TOKEN:-placeholder}
+      TWILIO_FROM_NUMBER: ${TWILIO_FROM_NUMBER:-+10000000000}
+
+      APP_ENVIRONMENT: local
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      keycloak:
+        condition: service_healthy
+      mailhog:
+        condition: service_started
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/actuator/health/liveness || exit 1"]
+      interval: 30s
+      timeout: 10s
+      start_period: 90s
+      retries: 3
+
+  # ─────────────────── pgAdmin (optional — start with --profile tools) ───────
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    profiles:
+      - tools
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@local.dev}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-admin}
+    ports:
+      - "5050:80"
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
+  kafka_data:
+  keycloak_data:
+  pgadmin_data:
